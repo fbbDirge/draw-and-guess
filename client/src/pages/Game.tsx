@@ -135,6 +135,13 @@ export default function Game({ ctx }: any) {
     return () => window.removeEventListener('ddg:forceClear', handler)
   }, [])
 
+  // After "play again" the game resets to waiting — return everyone to the room
+  useEffect(() => {
+    const handler = (e: any) => navigate(`/room/${e.detail || room?.id || id}`)
+    window.addEventListener('ddg:gameReset', handler)
+    return () => window.removeEventListener('ddg:gameReset', handler)
+  }, [navigate, room?.id, id])
+
   const handleStroke = useCallback((stroke: any) => emit('draw_stroke', stroke), [emit])
   const handleClear = useCallback(() => {
     emit('clear_canvas')

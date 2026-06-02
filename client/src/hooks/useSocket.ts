@@ -186,8 +186,10 @@ export function useSocket() {
       if (gameEndTimerRef.current) { clearTimeout(gameEndTimerRef.current); gameEndTimerRef.current = null }
       setRoom(data.room); setRound(null); setRoundEnd(null); setWordChoices(null)
       setGameOver(false); setFinalScores([]); setCanvasStrokes([]); setScores({})
+      setCountdown(-1)
       canvasVersionRef.current = 0
       setCanvasVersion(0)
+      window.dispatchEvent(new CustomEvent('ddg:gameReset', { detail: data.room?.id }))
     })
 
     s.on('chat_message', (data: ChatMessage) => addChat(data))
