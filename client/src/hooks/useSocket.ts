@@ -115,7 +115,7 @@ export function useSocket() {
     })
 
     s.on('draw_stroke', (data: any) => setCanvasStrokes((prev) => [...prev, data]))
-    s.on('canvas_cleared', () => setLastClear(Date.now()))
+    s.on('canvas_cleared', () => { setLastClear(Date.now()); setCanvasStrokes([]) })
     s.on('undo_stroke', () => setLastUndo(Date.now()))
 
     s.on('guess_result', (data: any) => {

@@ -180,7 +180,7 @@ export class GameLogic {
 
     room.status = 'playing'
     room.currentRound = 0
-    room.totalRounds = room.players.size * 2
+    room.totalRounds = room.players.size
     room.scores = {}
     for (const pid of room.players.keys()) room.scores[pid] = 0
     room.currentDrawerIndex = -1

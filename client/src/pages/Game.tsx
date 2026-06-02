@@ -240,7 +240,7 @@ export default function Game({ ctx }: any) {
         <div className="game-canvas-area">
           <Canvas
             strokes={canvasStrokes} onStroke={handleStroke}
-            color={eraser ? '#ffffff' : color} size={eraser ? brushSize * 3 : brushSize} readonly={!isDrawer}
+            color={eraser ? '#ffffff' : color} size={eraser ? brushSize * 6 : brushSize} readonly={!isDrawer}
             lastClear={lastClear} lastUndo={lastUndo}
           />
           {isDrawer && round && (

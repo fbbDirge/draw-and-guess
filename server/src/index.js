@@ -155,7 +155,7 @@ io.on('connection', (socket) => {
     if (!room || room.status !== 'playing') return
     const drawer = [...room.players.values()][room.currentDrawerIndex]
     if (drawer?.id !== socket.id) return
-    socket.to(room.id).emit('canvas_cleared')
+    io.to(room.id).emit('canvas_cleared')
   })
 
   socket.on('undo_stroke', () => {
