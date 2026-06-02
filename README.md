@@ -8,7 +8,7 @@
 ![Node.js](https://img.shields.io/badge/Node.js-18+-339933?logo=node.js&logoColor=white)
 ![Socket.IO](https://img.shields.io/badge/Socket.IO-4-010101?logo=socket.io&logoColor=white)
 
-**在线体验**：<https://game.011208.shop>
+
 
 ---
 
