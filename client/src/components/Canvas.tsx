@@ -1,4 +1,4 @@
-import { useRef, useEffect, useCallback } from 'react'
+import { useRef, useEffect, useCallback, forwardRef, useImperativeHandle } from 'react'
 
 interface Stroke {
   points: { x: number; y: number }[]
@@ -16,7 +16,13 @@ interface Props {
   lastUndo: number
 }
 
-export default function Canvas({ strokes, onStroke, color, size, readonly, lastClear, lastUndo }: Props) {
+export interface CanvasHandle {
+  forceClear: () => void
+}
+
+const Canvas = forwardRef<CanvasHandle, Props>(function Canvas(
+  { strokes, onStroke, color, size, readonly, lastClear, lastUndo }, ref
+) {
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const containerRef = useRef<HTMLDivElement>(null)
   const drawingRef = useRef(false)
@@ -30,6 +36,18 @@ export default function Canvas({ strokes, onStroke, color, size, readonly, lastC
   colorRef.current = color
   sizeRef.current = size
   readonlyRef.current = readonly
+
+  // Expose forceClear
+  useImperativeHandle(ref, () => ({
+    forceClear() {
+      localStrokesRef.current = []
+      const canvas = canvasRef.current
+      if (canvas) {
+        const ctx = canvas.getContext('2d')
+        if (ctx) ctx.clearRect(0, 0, canvas.width, canvas.height)
+      }
+    }
+  }), [])
 
   const getPos = useCallback((clientX: number, clientY: number) => {
     const canvas = canvasRef.current!
@@ -71,31 +89,23 @@ export default function Canvas({ strokes, onStroke, color, size, readonly, lastC
       const pos = getPos(e.touches[0].clientX, e.touches[0].clientY)
       const stroke = currentStrokeRef.current
       if (!stroke) return
-
       stroke.points.push(pos)
-
-      // Local render
       const canvas = canvasRef.current
       if (canvas) {
         const ctx = canvas.getContext('2d')
         if (ctx) {
           const pts = stroke.points
-          const l = pts.length
-          if (l >= 2) {
+          if (pts.length >= 2) {
             ctx.lineCap = 'round'; ctx.lineJoin = 'round'
             ctx.strokeStyle = colorRef.current; ctx.lineWidth = sizeRef.current
             ctx.beginPath()
-            ctx.moveTo(pts[l - 2].x * canvas.width, pts[l - 2].y * canvas.height)
-            ctx.lineTo(pts[l - 1].x * canvas.width, pts[l - 1].y * canvas.height)
+            ctx.moveTo(pts[pts.length - 2].x * canvas.width, pts[pts.length - 2].y * canvas.height)
+            ctx.lineTo(pts[pts.length - 1].x * canvas.width, pts[pts.length - 1].y * canvas.height)
             ctx.stroke()
           }
         }
       }
-
-      // Throttled send: from lastSentPos to current pos (ensures continuity)
-      if (Date.now() - lastSentTimeRef.current >= 35) {
-        flushSegment(pos)
-      }
+      if (Date.now() - lastSentTimeRef.current >= 35) flushSegment(pos)
     }
 
     function onTouchEnd() {
@@ -103,7 +113,6 @@ export default function Canvas({ strokes, onStroke, color, size, readonly, lastC
       drawingRef.current = false
       const stroke = currentStrokeRef.current
       if (stroke && stroke.points.length > 0) {
-        // Send final segment if needed
         const lastPt = stroke.points[stroke.points.length - 1]
         if (lastSentPosRef.current && (lastSentPosRef.current.x !== lastPt.x || lastSentPosRef.current.y !== lastPt.y)) {
           onStroke({ points: [{ ...lastSentPosRef.current }, { ...lastPt }], color: colorRef.current, size: sizeRef.current })
@@ -180,7 +189,6 @@ export default function Canvas({ strokes, onStroke, color, size, readonly, lastC
     }
   }
 
-  // Mouse
   function handleMouseDown(e: React.MouseEvent) {
     if (readonly) return
     const pos = getPos(e.clientX, e.clientY)
@@ -196,7 +204,6 @@ export default function Canvas({ strokes, onStroke, color, size, readonly, lastC
     const stroke = currentStrokeRef.current
     if (!stroke) return
     stroke.points.push(pos)
-
     const canvas = canvasRef.current
     if (canvas) {
       const ctx = canvas.getContext('2d')
@@ -212,10 +219,7 @@ export default function Canvas({ strokes, onStroke, color, size, readonly, lastC
         }
       }
     }
-
-    if (Date.now() - lastSentTimeRef.current >= 35) {
-      flushSegment(pos)
-    }
+    if (Date.now() - lastSentTimeRef.current >= 35) flushSegment(pos)
   }
 
   function handleMouseUp() {
@@ -247,4 +251,6 @@ export default function Canvas({ strokes, onStroke, color, size, readonly, lastC
       {readonly && <div style={{ position: 'absolute', bottom: 8, left: 12, color: '#999', fontSize: 12 }}>画家正在作画...</div>}
     </div>
   )
-}
+})
+
+export default Canvas

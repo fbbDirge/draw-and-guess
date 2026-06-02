@@ -1,6 +1,6 @@
 import { useEffect, useState, useRef, useCallback } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
-import Canvas from '../components/Canvas'
+import Canvas, { CanvasHandle } from '../components/Canvas'
 import Chat from '../components/Chat'
 import ScoreBoard from '../components/ScoreBoard'
 import './Game.css'
@@ -83,6 +83,7 @@ export default function Game({ ctx }: any) {
   const [timer, setTimer] = useState(0)
   const [snapshot, setSnapshot] = useState<string>('')
   const [finalShow, setFinalShow] = useState(false)
+  const canvasRef = useRef<CanvasHandle>(null)
   const timerRef = useRef<NodeJS.Timeout | null>(null)
   const gameOverTimerRef = useRef<NodeJS.Timeout | null>(null)
   const [triedJoin, setTriedJoin] = useState(false)
@@ -138,12 +139,17 @@ export default function Game({ ctx }: any) {
     if (error) { const t = setTimeout(() => clearError(), 3000); return () => clearTimeout(t) }
   }, [error, clearError])
 
+  // Listen for forceClear event from socket handler
+  useEffect(() => {
+    const handler = () => canvasRef.current?.forceClear()
+    window.addEventListener('ddg:forceClear', handler)
+    return () => window.removeEventListener('ddg:forceClear', handler)
+  }, [])
+
   const handleStroke = useCallback((stroke: any) => emit('draw_stroke', stroke), [emit])
   const handleClear = useCallback(() => {
     emit('clear_canvas')
-    // Directly clear canvas element
-    const c = document.querySelector('canvas')
-    if (c) { const ctx = c.getContext('2d'); if (ctx) ctx.clearRect(0, 0, c.width, c.height) }
+    canvasRef.current?.forceClear()
   }, [emit])
   const handleUndo = useCallback(() => emit('undo_stroke'), [emit])
   const handleGuess = useCallback((guess: string) => emit('submit_guess', { guess }), [emit])
@@ -204,7 +210,7 @@ export default function Game({ ctx }: any) {
         </div>
       )}
 
-      {roundEnd && (
+      {roundEnd && !finalShow && !gameOver && (
         <div className="round-end-overlay">
           <div className="round-end-card">
             <h3>本轮结束</h3>
@@ -256,6 +262,7 @@ export default function Game({ ctx }: any) {
       <div className="game-layout">
         <div className="game-canvas-area">
           <Canvas
+            ref={canvasRef}
             strokes={canvasStrokes} onStroke={handleStroke}
             color={eraser ? '#ffffff' : color} size={eraser ? brushSize * 6 : brushSize} readonly={!isDrawer}
             lastClear={lastClear} lastUndo={lastUndo}

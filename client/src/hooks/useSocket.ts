@@ -117,8 +117,8 @@ export function useSocket() {
     s.on('draw_stroke', (data: any) => setCanvasStrokes((prev) => [...prev, data]))
     s.on('canvas_cleared', () => {
       setLastClear(Date.now()); setCanvasStrokes([])
-      const c = document.querySelector('canvas')
-      if (c) { const ctx = c.getContext('2d'); if (ctx) ctx.clearRect(0, 0, c.width, c.height) }
+      // Dispatch custom event so Canvas can forceClear via ref
+      window.dispatchEvent(new CustomEvent('ddg:forceClear'))
     })
     s.on('undo_stroke', () => setLastUndo(Date.now()))
 
