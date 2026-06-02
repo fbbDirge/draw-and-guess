@@ -5,7 +5,7 @@ import './Room.css'
 
 export default function Room({ ctx }: any) {
   const {
-    connect, connected, emit, room, myPlayerId, myPlayer,
+    connect, connected, emit, leaveRoom, room, myPlayerId, myPlayer,
     chatMessages, countdown, error, clearError,
   } = ctx
   const { id } = useParams()
@@ -57,7 +57,7 @@ export default function Room({ ctx }: any) {
         <div className="card" style={{ textAlign: 'center', maxWidth: 400, width: '100%' }}>
           <p>正在加入房间 {id}...</p>
           {!connected && <p style={{ color: 'var(--text2)', fontSize: '.85rem' }}>连接服务器中...</p>}
-          <button className="btn-outline btn-sm" style={{ marginTop: 12 }} onClick={() => navigate('/')}>
+          <button className="btn-outline btn-sm" style={{ marginTop: 12 }} onClick={() => { leaveRoom(); navigate('/') }}>
             返回首页
           </button>
         </div>
@@ -128,7 +128,7 @@ export default function Room({ ctx }: any) {
                   {isHost ? '房主自动准备' : (myPlayer?.isReady ? '取消准备' : '准备')}
                 </button>
               )}
-              <button className="btn-outline" onClick={() => { emit('leave_room'); navigate('/') }}>
+              <button className="btn-outline" onClick={() => { leaveRoom(); navigate('/') }}>
                 离开房间
               </button>
             </div>

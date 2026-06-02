@@ -18,7 +18,7 @@ export interface RoundInfo {
   round: number; totalRounds: number
   drawerId: string; drawerName: string
   word?: string; wordLength: number; category: string
-  roundTime: number; isDrawer: boolean
+  roundTime: number; isDrawer: boolean; canvasVersion?: number
 }
 
 export interface WordChoice {
@@ -37,6 +37,7 @@ export interface RoundEndData {
   correctGuessers: string[]
   scores: Record<string, number>
   gameEnding: boolean
+  finalScores?: { id: string; name: string; score: number }[]
 }
 
 export interface ChatMessage {
@@ -60,9 +61,11 @@ export function useSocket() {
   const [countdown, setCountdown] = useState(-1)
   const [canvasStrokes, setCanvasStrokes] = useState<any[]>([])
   const [lastClear, setLastClear] = useState(0)
-  const [lastUndo, setLastUndo] = useState(0)
+  const [canvasVersion, setCanvasVersion] = useState(0)
   const [timerBump, setTimerBump] = useState(0)
   const [lastCorrectId, setLastCorrectId] = useState<string>('')
+  const canvasVersionRef = useRef(0)
+  const gameEndTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const [error, setError] = useState<string>('')
   const playerTokenRef = useRef(getPlayerToken())
 
@@ -111,16 +114,38 @@ export function useSocket() {
 
     s.on('round_start', (data: RoundInfo) => {
       setRound(data); setWordChoices(null); setRoundEnd(null)
-      setGameOver(false); setCanvasStrokes([]); setLastClear(Date.now())
+      setGameOver(false); setCountdown(-1)
+      canvasVersionRef.current = data.canvasVersion || 0
+      setCanvasVersion(canvasVersionRef.current)
+      setCanvasStrokes([])
+      setLastClear(Date.now())
     })
 
-    s.on('draw_stroke', (data: any) => setCanvasStrokes((prev) => [...prev, data]))
-    s.on('canvas_cleared', () => {
+    s.on('draw_stroke', (data: any) => {
+      const strokeVersion = data?.canvasVersion || 0
+      setCanvasStrokes((prev) => {
+        if (strokeVersion && strokeVersion < canvasVersionRef.current) return prev
+        if (strokeVersion > canvasVersionRef.current) {
+          canvasVersionRef.current = strokeVersion
+          setCanvasVersion(strokeVersion)
+          return [data]
+        }
+        return [...prev, data]
+      })
+    })
+    s.on('canvas_cleared', (data: any) => {
+      const nextVersion = data?.canvasVersion || 0
+      canvasVersionRef.current = nextVersion
+      setCanvasVersion(nextVersion)
       setLastClear(Date.now()); setCanvasStrokes([])
       // Dispatch custom event so Canvas can forceClear via ref
       window.dispatchEvent(new CustomEvent('ddg:forceClear'))
     })
-    s.on('undo_stroke', () => setLastUndo(Date.now()))
+    s.on('undo_stroke', (data: any) => {
+      const strokeId = data?.strokeId
+      if (!strokeId) return
+      setCanvasStrokes((prev) => prev.filter((seg: any) => seg?.strokeId !== strokeId))
+    })
 
     s.on('guess_result', (data: any) => {
       if (data.scores) setScores(data.scores)
@@ -133,6 +158,16 @@ export function useSocket() {
     s.on('round_end', (data: RoundEndData) => {
       setRoundEnd(data); setRound(null)
       if (data.scores) setScores(data.scores)
+      // Fallback: if this is the last round, ensure the game-over panel shows
+      // even if the server's game_end event is lost or delayed.
+      if (data.gameEnding && data.finalScores) {
+        if (gameEndTimerRef.current) clearTimeout(gameEndTimerRef.current)
+        gameEndTimerRef.current = setTimeout(() => {
+          setGameOver(true)
+          setFinalScores(data.finalScores!)
+          setRoundEnd(null)
+        }, 6000)
+      }
     })
 
     s.on('timer_shorten', (data: any) => {
@@ -141,14 +176,18 @@ export function useSocket() {
     })
 
     s.on('game_end', (data: any) => {
+      if (gameEndTimerRef.current) { clearTimeout(gameEndTimerRef.current); gameEndTimerRef.current = null }
       setGameOver(true); setFinalScores(data.finalScores || [])
       if (data.scores) setScores(data.scores)
       setRound(null); setWordChoices(null); setRoundEnd(null)
     })
 
     s.on('game_reset', (data: any) => {
+      if (gameEndTimerRef.current) { clearTimeout(gameEndTimerRef.current); gameEndTimerRef.current = null }
       setRoom(data.room); setRound(null); setRoundEnd(null); setWordChoices(null)
       setGameOver(false); setFinalScores([]); setCanvasStrokes([]); setScores({})
+      canvasVersionRef.current = 0
+      setCanvasVersion(0)
     })
 
     s.on('chat_message', (data: ChatMessage) => addChat(data))
@@ -161,18 +200,30 @@ export function useSocket() {
     socketRef.current?.emit(event, { ...data, playerToken: playerTokenRef.current })
   }, [])
 
+  const leaveRoom = useCallback(() => {
+    socketRef.current?.emit('leave_room', { playerToken: playerTokenRef.current })
+    if (gameEndTimerRef.current) { clearTimeout(gameEndTimerRef.current); gameEndTimerRef.current = null }
+    setRoom(null); setRound(null); setRoundEnd(null); setWordChoices(null)
+    setGameOver(false); setFinalScores([]); setCanvasStrokes([]); setScores({})
+    setCountdown(-1); canvasVersionRef.current = 0; setCanvasVersion(0)
+  }, [])
+
   const clearError = useCallback(() => setError(''), [])
 
   useEffect(() => {
-    return () => { socketRef.current?.disconnect(); socketRef.current = null }
+    return () => {
+      socketRef.current?.disconnect(); socketRef.current = null
+      if (gameEndTimerRef.current) clearTimeout(gameEndTimerRef.current)
+    }
   }, [])
 
   return {
-    connect, connected, emit,
+    connect, connected, emit, leaveRoom,
     room, myPlayerId, myPlayer,
     round, wordChoices, roundEnd,
     chatMessages, scores, finalScores, gameOver,
-    countdown, canvasStrokes, lastClear, lastUndo, timerBump, lastCorrectId,
+    countdown, canvasStrokes, lastClear, timerBump, lastCorrectId,
+    canvasVersion,
     error, clearError,
   }
 }

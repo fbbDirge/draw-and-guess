@@ -105,6 +105,7 @@
   z-index: 105; padding: 16px; animation: fadeIn .3s;
 }
 .word-picker-overlay { z-index: 110; }
+.game-over-overlay { z-index: 120; }
 .game-over-card, .word-picker-card, .round-end-card {
   background: var(--bg2); border-radius: var(--radius); padding: 20px 24px;
   max-width: 420px; width: 100%; box-shadow: 0 8px 40px rgba(0,0,0,.5);

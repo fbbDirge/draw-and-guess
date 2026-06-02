@@ -147,7 +147,10 @@ io.on('connection', (socket) => {
     if (!room || room.status !== 'playing') return
     const drawer = [...room.players.values()][room.currentDrawerIndex]
     if (drawer?.id !== socket.id) return
-    socket.to(room.id).emit('draw_stroke', data)
+    socket.to(room.id).emit('draw_stroke', {
+      ...data,
+      canvasVersion: room.canvasVersion || 0,
+    })
   })
 
   socket.on('clear_canvas', () => {
@@ -155,15 +158,16 @@ io.on('connection', (socket) => {
     if (!room || room.status !== 'playing') return
     const drawer = [...room.players.values()][room.currentDrawerIndex]
     if (drawer?.id !== socket.id) return
-    io.to(room.id).emit('canvas_cleared')
+    room.canvasVersion = (room.canvasVersion || 0) + 1
+    io.to(room.id).emit('canvas_cleared', { canvasVersion: room.canvasVersion })
   })
 
-  socket.on('undo_stroke', () => {
+  socket.on('undo_stroke', ({ strokeId } = {}) => {
     const room = rooms.getRoom(getRoomId(socket.id))
     if (!room || room.status !== 'playing') return
     const drawer = [...room.players.values()][room.currentDrawerIndex]
     if (drawer?.id !== socket.id) return
-    socket.to(room.id).emit('undo_stroke')
+    socket.to(room.id).emit('undo_stroke', { strokeId })
   })
 
   socket.on('submit_guess', ({ guess }) => {

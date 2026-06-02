@@ -1,33 +1,46 @@
 import { useRef, useEffect, useCallback, forwardRef, useImperativeHandle } from 'react'
 
+interface Point { x: number; y: number }
+
 interface Stroke {
-  points: { x: number; y: number }[]
+  points: Point[]
   color: string
   size: number
+  id: string
 }
+
+type Segment = { points: Point[]; color: string; size: number; strokeId: string }
 
 interface Props {
   strokes: Stroke[]
-  onStroke: (stroke: Stroke) => void
+  onStroke: (seg: Segment) => void
   color: string
   size: number
   readonly: boolean
   lastClear: number
-  lastUndo: number
+  canvasVersion: number
 }
 
 export interface CanvasHandle {
   forceClear: () => void
+  undoLast: () => string | null
+}
+
+let _strokeSeq = 0
+function newStrokeId() {
+  _strokeSeq = (_strokeSeq + 1) % 1_000_000_000
+  return `${Date.now().toString(36)}-${_strokeSeq.toString(36)}`
 }
 
 const Canvas = forwardRef<CanvasHandle, Props>(function Canvas(
-  { strokes, onStroke, color, size, readonly, lastClear, lastUndo }, ref
+  { strokes, onStroke, color, size, readonly, lastClear, canvasVersion }, ref
 ) {
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const containerRef = useRef<HTMLDivElement>(null)
   const drawingRef = useRef(false)
   const currentStrokeRef = useRef<Stroke | null>(null)
   const localStrokesRef = useRef<Stroke[]>([])
+  const strokeIdRef = useRef('')
   const lastSentPosRef = useRef<{ x: number; y: number } | null>(null)
   const lastSentTimeRef = useRef(0)
   const colorRef = useRef(color)
@@ -37,17 +50,24 @@ const Canvas = forwardRef<CanvasHandle, Props>(function Canvas(
   sizeRef.current = size
   readonlyRef.current = readonly
 
-  // Expose forceClear
+  // Expose imperative handle
   useImperativeHandle(ref, () => ({
     forceClear() {
       localStrokesRef.current = []
+      strokeIdRef.current = ''
       const canvas = canvasRef.current
       if (canvas) {
         const ctx = canvas.getContext('2d')
         if (ctx) ctx.clearRect(0, 0, canvas.width, canvas.height)
       }
-    }
-  }), [])
+    },
+    undoLast() {
+      const popped = localStrokesRef.current.pop()
+      const canvas = canvasRef.current
+      if (canvas) redraw(canvas, [...strokes, ...localStrokesRef.current])
+      return popped?.id ?? null
+    },
+  }), [strokes])
 
   const getPos = useCallback((clientX: number, clientY: number) => {
     const canvas = canvasRef.current!
@@ -62,7 +82,7 @@ const Canvas = forwardRef<CanvasHandle, Props>(function Canvas(
     const from = lastSentPosRef.current
     if (!from) return
     if (from.x === toPos.x && from.y === toPos.y) return
-    onStroke({ points: [{ ...from }, { ...toPos }], color: colorRef.current, size: sizeRef.current })
+    onStroke({ points: [{ ...from }, { ...toPos }], color: colorRef.current, size: sizeRef.current, strokeId: strokeIdRef.current })
     lastSentPosRef.current = toPos
     lastSentTimeRef.current = Date.now()
   }, [onStroke])
@@ -77,7 +97,8 @@ const Canvas = forwardRef<CanvasHandle, Props>(function Canvas(
       e.preventDefault()
       const t = e.touches[0]
       const pos = getPos(t.clientX, t.clientY)
-      currentStrokeRef.current = { points: [pos], color: colorRef.current, size: sizeRef.current }
+      strokeIdRef.current = newStrokeId()
+      currentStrokeRef.current = { points: [pos], color: colorRef.current, size: sizeRef.current, id: strokeIdRef.current }
       lastSentPosRef.current = pos
       lastSentTimeRef.current = Date.now()
       drawingRef.current = true
@@ -115,7 +136,7 @@ const Canvas = forwardRef<CanvasHandle, Props>(function Canvas(
       if (stroke && stroke.points.length > 0) {
         const lastPt = stroke.points[stroke.points.length - 1]
         if (lastSentPosRef.current && (lastSentPosRef.current.x !== lastPt.x || lastSentPosRef.current.y !== lastPt.y)) {
-          onStroke({ points: [{ ...lastSentPosRef.current }, { ...lastPt }], color: colorRef.current, size: sizeRef.current })
+          onStroke({ points: [{ ...lastSentPosRef.current }, { ...lastPt }], color: colorRef.current, size: sizeRef.current, strokeId: strokeIdRef.current })
         }
         localStrokesRef.current.push(stroke)
       }
@@ -163,14 +184,7 @@ const Canvas = forwardRef<CanvasHandle, Props>(function Canvas(
     localStrokesRef.current = []
     const canvas = canvasRef.current
     if (canvas) redraw(canvas, strokes)
-  }, [lastClear])
-
-  useEffect(() => {
-    if (lastUndo <= 0) return
-    if (localStrokesRef.current.length > 0) localStrokesRef.current.pop()
-    const canvas = canvasRef.current
-    if (canvas) redraw(canvas, [...strokes, ...localStrokesRef.current])
-  }, [lastUndo])
+  }, [lastClear, canvasVersion])
 
   function redraw(canvas: HTMLCanvasElement, allStrokes: Stroke[]) {
     const ctx = canvas.getContext('2d')
@@ -192,7 +206,8 @@ const Canvas = forwardRef<CanvasHandle, Props>(function Canvas(
   function handleMouseDown(e: React.MouseEvent) {
     if (readonly) return
     const pos = getPos(e.clientX, e.clientY)
-    currentStrokeRef.current = { points: [pos], color, size }
+    strokeIdRef.current = newStrokeId()
+    currentStrokeRef.current = { points: [pos], color, size, id: strokeIdRef.current }
     lastSentPosRef.current = pos
     lastSentTimeRef.current = Date.now()
     drawingRef.current = true
@@ -229,7 +244,7 @@ const Canvas = forwardRef<CanvasHandle, Props>(function Canvas(
     if (stroke && stroke.points.length > 0) {
       const lastPt = stroke.points[stroke.points.length - 1]
       if (lastSentPosRef.current && (lastSentPosRef.current.x !== lastPt.x || lastSentPosRef.current.y !== lastPt.y)) {
-        onStroke({ points: [{ ...lastSentPosRef.current }, { ...lastPt }], color, size })
+        onStroke({ points: [{ ...lastSentPosRef.current }, { ...lastPt }], color, size, strokeId: strokeIdRef.current })
       }
       localStrokesRef.current.push(stroke)
     }

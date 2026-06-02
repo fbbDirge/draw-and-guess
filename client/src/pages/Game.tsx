@@ -69,9 +69,9 @@ function MobileChat({ messages, onGuess, disabled }: {
 
 export default function Game({ ctx }: any) {
   const {
-    connect, connected, emit, room, myPlayerId, round, wordChoices, roundEnd,
+    connect, connected, emit, leaveRoom, room, myPlayerId, round, wordChoices, roundEnd,
     chatMessages, scores, finalScores, gameOver,
-    countdown, canvasStrokes, lastClear, lastUndo, timerBump, lastCorrectId,
+    countdown, canvasStrokes, lastClear, timerBump, lastCorrectId, canvasVersion,
     error, clearError,
   } = ctx
   const { id } = useParams()
@@ -82,10 +82,8 @@ export default function Game({ ctx }: any) {
   const [eraser, setEraser] = useState(false)
   const [timer, setTimer] = useState(0)
   const [snapshot, setSnapshot] = useState<string>('')
-  const [finalShow, setFinalShow] = useState(false)
   const canvasRef = useRef<CanvasHandle>(null)
   const timerRef = useRef<NodeJS.Timeout | null>(null)
-  const gameOverTimerRef = useRef<NodeJS.Timeout | null>(null)
   const [triedJoin, setTriedJoin] = useState(false)
 
   useEffect(() => {
@@ -123,16 +121,7 @@ export default function Game({ ctx }: any) {
       if (timerRef.current) clearInterval(timerRef.current)
       const canvas = document.querySelector('canvas')
       if (canvas) { try { setSnapshot(canvas.toDataURL('image/png')) } catch { setSnapshot('') } }
-      // Last round: auto-transition to game over after 5s
-      if (roundEnd.gameEnding && roundEnd.finalScores) {
-        setFinalShow(false)
-        if (gameOverTimerRef.current) clearTimeout(gameOverTimerRef.current)
-        gameOverTimerRef.current = setTimeout(() => {
-          setFinalShow(true)
-        }, 5000)
-      }
     } else { setSnapshot('') }
-    return () => { if (gameOverTimerRef.current) clearTimeout(gameOverTimerRef.current) }
   }, [roundEnd])
 
   useEffect(() => {
@@ -151,7 +140,10 @@ export default function Game({ ctx }: any) {
     emit('clear_canvas')
     canvasRef.current?.forceClear()
   }, [emit])
-  const handleUndo = useCallback(() => emit('undo_stroke'), [emit])
+  const handleUndo = useCallback(() => {
+    const strokeId = canvasRef.current?.undoLast()
+    if (strokeId) emit('undo_stroke', { strokeId })
+  }, [emit])
   const handleGuess = useCallback((guess: string) => emit('submit_guess', { guess }), [emit])
   const handlePickWord = useCallback((idx: number) => emit('pick_word', { choiceIndex: idx }), [emit])
   const handleRefreshWords = useCallback(() => emit('refresh_words'), [emit])
@@ -165,7 +157,7 @@ export default function Game({ ctx }: any) {
       <div className="page game-page">
         <div className="card" style={{ textAlign: 'center' }}>
           <p>正在连接游戏...</p>
-          <button className="btn-outline btn-sm" style={{ marginTop: 12 }} onClick={() => navigate('/')}>返回首页</button>
+          <button className="btn-outline btn-sm" style={{ marginTop: 12 }} onClick={() => { leaveRoom(); navigate('/') }}>返回首页</button>
         </div>
       </div>
     )
@@ -175,15 +167,15 @@ export default function Game({ ctx }: any) {
     <div className="page game-page">
       {error && <div className="error-toast" onClick={clearError}>{error}</div>}
 
-      {(gameOver || finalShow) && (
+      {gameOver && (
         <div className="game-over-overlay">
           <div className="game-over-card">
             <h2>游戏结束</h2>
             <ScoreBoard scores={scores} players={room.players}
-              finalScores={finalScores.length > 0 ? finalScores : (roundEnd?.finalScores || [])} />
+              finalScores={finalScores} />
             <div className="game-over-actions">
               {isHost && <button className="btn-primary" onClick={() => emit('play_again')}>再来一局</button>}
-              <button className="btn-outline" onClick={() => { emit('leave_room'); navigate('/') }}>返回首页</button>
+              <button className="btn-outline" onClick={() => { leaveRoom(); navigate('/') }}>返回首页</button>
             </div>
           </div>
         </div>
@@ -210,7 +202,7 @@ export default function Game({ ctx }: any) {
         </div>
       )}
 
-      {roundEnd && !finalShow && !gameOver && (
+      {roundEnd && !gameOver && (
         <div className="round-end-overlay">
           <div className="round-end-card">
             <h3>本轮结束</h3>
@@ -265,7 +257,7 @@ export default function Game({ ctx }: any) {
             ref={canvasRef}
             strokes={canvasStrokes} onStroke={handleStroke}
             color={eraser ? '#ffffff' : color} size={eraser ? brushSize * 6 : brushSize} readonly={!isDrawer}
-            lastClear={lastClear} lastUndo={lastUndo}
+            lastClear={lastClear} canvasVersion={canvasVersion}
           />
           {isDrawer && round && (
             <div className="draw-tools">

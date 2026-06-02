@@ -25,6 +25,7 @@ export class RoomManager {
       roundTimer: null,
       guessedThisRound: new Set(),
       roundStartTime: 0,
+      canvasVersion: 0,
       pendingWordChoices: null,
       pendingDrawerIndex: -1,
       wordRefreshLeft: 0,
@@ -276,6 +277,7 @@ export class GameLogic {
     room.pendingWordChoices = null
     room.pendingDrawerIndex = -1
     room.roundStartTime = Date.now()
+    room.canvasVersion += 1
 
     // Start round timer
     if (room.roundTimer) clearTimeout(room.roundTimer)
@@ -293,6 +295,7 @@ export class GameLogic {
       wordLength: chosen.word.length,
       category: chosen.category,
       roundTime: room.roundTime,
+      canvasVersion: room.canvasVersion,
     }
   }
 
@@ -435,6 +438,7 @@ export class GameLogic {
     room.currentCategory = ''
     room.guessedThisRound = new Set()
     room.scores = {}
+    room.canvasVersion = 0
     room.pendingWordChoices = null
     room.pendingDrawerIndex = -1
     if (room.roundTimer) clearTimeout(room.roundTimer)
