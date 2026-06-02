@@ -1,0 +1,173 @@
+import { useState, useEffect, useRef, useCallback } from 'react'
+import { io, Socket } from 'socket.io-client'
+import { getPlayerToken } from '../utils/storage'
+
+const SOCKET_URL = import.meta.env.VITE_SERVER_URL || ''
+
+export interface Player {
+  id: string; name: string; isHost: boolean; isReady: boolean; score: number
+}
+
+export interface RoomState {
+  id: string; maxPlayers: number; roundTime: number
+  status: 'waiting' | 'playing' | 'finished'
+  hostId: string; players: Player[]; currentRound: number; totalRounds: number
+}
+
+export interface RoundInfo {
+  round: number; totalRounds: number
+  drawerId: string; drawerName: string
+  word?: string; wordLength: number; category: string
+  roundTime: number; isDrawer: boolean
+}
+
+export interface WordChoice {
+  word: string; category: string
+}
+
+export interface WordChoicesData {
+  drawerId: string; drawerName: string
+  choices: WordChoice[]; refreshLeft: number
+  round: number; totalRounds: number; roundTime: number
+}
+
+export interface RoundEndData {
+  word: string; category: string
+  drawerId: string; drawerName: string
+  correctGuessers: string[]
+  scores: Record<string, number>
+  gameEnding: boolean
+}
+
+export interface ChatMessage {
+  system?: boolean; userId?: string; userName?: string
+  message: string; isGuess?: boolean
+}
+
+export function useSocket() {
+  const socketRef = useRef<Socket | null>(null)
+  const [connected, setConnected] = useState(false)
+  const [room, setRoom] = useState<RoomState | null>(null)
+  const [myPlayerId, setMyPlayerId] = useState<string>('')
+  const [myPlayer, setMyPlayer] = useState<Player | null>(null)
+  const [round, setRound] = useState<RoundInfo | null>(null)
+  const [wordChoices, setWordChoices] = useState<WordChoicesData | null>(null)
+  const [roundEnd, setRoundEnd] = useState<RoundEndData | null>(null)
+  const [chatMessages, setChatMessages] = useState<ChatMessage[]>([])
+  const [scores, setScores] = useState<Record<string, number>>({})
+  const [finalScores, setFinalScores] = useState<{ id: string; name: string; score: number }[]>([])
+  const [gameOver, setGameOver] = useState(false)
+  const [countdown, setCountdown] = useState(-1)
+  const [canvasStrokes, setCanvasStrokes] = useState<any[]>([])
+  const [lastClear, setLastClear] = useState(0)
+  const [lastUndo, setLastUndo] = useState(0)
+  const [timerBump, setTimerBump] = useState(0)
+  const [lastCorrectId, setLastCorrectId] = useState<string>('')
+  const [error, setError] = useState<string>('')
+  const playerTokenRef = useRef(getPlayerToken())
+
+  const addChat = useCallback((msg: ChatMessage) => {
+    setChatMessages((prev) => [...prev.slice(-200), msg])
+  }, [])
+
+  const connect = useCallback(() => {
+    if (socketRef.current) return
+    const s = io(SOCKET_URL, {
+      transports: ['websocket', 'polling'],
+      reconnection: true, reconnectionDelay: 1000, reconnectionAttempts: Infinity,
+    })
+    socketRef.current = s
+
+    s.on('connect', () => setConnected(true))
+    s.on('disconnect', () => setConnected(false))
+
+    s.on('room_created', (data: any) => {
+      setRoom(data.room); setMyPlayerId(data.player.id); setMyPlayer(data.player)
+      addChat({ system: true, message: `房间 ${data.roomId} 创建成功` })
+    })
+
+    s.on('room_joined', (data: any) => {
+      setRoom(data.room); setMyPlayerId(data.player.id); setMyPlayer(data.player)
+    })
+
+    s.on('kicked', (data: any) => {
+      setRoom(null); setMyPlayer(null); setError(data.message || '你被移出房间'); s.disconnect()
+    })
+
+    s.on('room_update', (data: any) => {
+      setRoom(data.room)
+      if (data.room?.players) {
+        const me = data.room.players.find((p: Player) => p.id === s.id)
+        if (me) { setMyPlayer(me); setMyPlayerId(me.id) }
+      }
+    })
+
+    s.on('game_starting', (data: any) => setCountdown(data.countdown))
+
+    s.on('word_choices', (data: WordChoicesData) => {
+      setWordChoices(data)
+      setRoundEnd(null)
+    })
+
+    s.on('round_start', (data: RoundInfo) => {
+      setRound(data); setWordChoices(null); setRoundEnd(null)
+      setGameOver(false); setCanvasStrokes([]); setLastClear(Date.now())
+    })
+
+    s.on('draw_stroke', (data: any) => setCanvasStrokes((prev) => [...prev, data]))
+    s.on('canvas_cleared', () => setLastClear(Date.now()))
+    s.on('undo_stroke', () => setLastUndo(Date.now()))
+
+    s.on('guess_result', (data: any) => {
+      if (data.scores) setScores(data.scores)
+      if (data.correct && data.playerId) {
+        setLastCorrectId(data.playerId)
+        setTimeout(() => setLastCorrectId(''), 2000)
+      }
+    })
+
+    s.on('round_end', (data: RoundEndData) => {
+      setRoundEnd(data); setRound(null)
+      if (data.scores) setScores(data.scores)
+    })
+
+    s.on('timer_shorten', (data: any) => {
+      setRound((prev) => prev ? { ...prev, roundTime: data.seconds } : null)
+      setTimerBump((n) => n + 1)
+    })
+
+    s.on('game_end', (data: any) => {
+      setGameOver(true); setFinalScores(data.finalScores || [])
+      if (data.scores) setScores(data.scores); setRound(null); setWordChoices(null)
+    })
+
+    s.on('game_reset', (data: any) => {
+      setRoom(data.room); setRound(null); setRoundEnd(null); setWordChoices(null)
+      setGameOver(false); setFinalScores([]); setCanvasStrokes([]); setScores({})
+    })
+
+    s.on('chat_message', (data: ChatMessage) => addChat(data))
+    s.on('error', (data: any) => setError(data.message))
+    s.on('room_closed', (data: any) => { setRoom(null); setError(data.message) })
+    s.on('left_room', () => { setRoom(null); setRound(null) })
+  }, [addChat])
+
+  const emit = useCallback((event: string, data?: any) => {
+    socketRef.current?.emit(event, { ...data, playerToken: playerTokenRef.current })
+  }, [])
+
+  const clearError = useCallback(() => setError(''), [])
+
+  useEffect(() => {
+    return () => { socketRef.current?.disconnect(); socketRef.current = null }
+  }, [])
+
+  return {
+    connect, connected, emit,
+    room, myPlayerId, myPlayer,
+    round, wordChoices, roundEnd,
+    chatMessages, scores, finalScores, gameOver,
+    countdown, canvasStrokes, lastClear, lastUndo, timerBump, lastCorrectId,
+    error, clearError,
+  }
+}

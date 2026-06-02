@@ -1,0 +1,53 @@
+.home-page { justify-content: center; min-height: 100vh; }
+
+.home-card {
+  max-width: 460px;
+}
+
+.form-group { margin-bottom: 14px; }
+.form-group label {
+  display: block;
+  font-size: .85rem;
+  color: var(--text2);
+  margin-bottom: 6px;
+  font-weight: 600;
+}
+
+.chip-group {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.chip {
+  padding: 6px 14px;
+  border-radius: 20px;
+  font-size: .85rem;
+  background: var(--bg3);
+  color: var(--text);
+  border: 2px solid transparent;
+}
+.chip.active { border-color: var(--primary); color: var(--primary); background: rgba(233,68,96,.1); }
+
+.section { margin: 16px 0; }
+.section h3 { font-size: .95rem; color: var(--text2); margin-bottom: 10px; }
+
+.divider {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  color: var(--text2);
+  font-size: .85rem;
+  margin: 8px 0;
+}
+.divider::before, .divider::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: var(--bg3);
+}
+
+.join-row { display: flex; gap: 8px; }
+.join-row input { flex: 1; }
+.join-row button { white-space: nowrap; }
+
+.recent-rooms { display: flex; flex-wrap: wrap; gap: 8px; }
