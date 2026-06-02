@@ -370,14 +370,8 @@ export class GameLogic {
         if (nextData && this._onNextRound) this._onNextRound(room.id, nextData)
       }, 5000)
     } else {
-      // Last round: end game after 5s
-      this._setTimer(() => {
-        if (room.status === 'playing' && this._onGameEnd) {
-          room.status = 'finished'
-          if (room.roundTimer) clearTimeout(room.roundTimer)
-          this._onGameEnd(room.id, this._endGame(room))
-        }
-      }, 5000)
+      // Last round: mark finished immediately, game_end sent by proxy
+      room.status = 'finished'
     }
 
     return {
@@ -388,6 +382,8 @@ export class GameLogic {
       correctGuessers: [...room.guessedThisRound],
       scores: { ...room.scores },
       gameEnding,
+      // Include final scores for last round
+      finalScores: gameEnding ? this._getFinalScores(room) : undefined,
     }
   }
 

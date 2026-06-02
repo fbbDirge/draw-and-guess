@@ -138,7 +138,8 @@ export function useSocket() {
 
     s.on('game_end', (data: any) => {
       setGameOver(true); setFinalScores(data.finalScores || [])
-      if (data.scores) setScores(data.scores); setRound(null); setWordChoices(null)
+      if (data.scores) setScores(data.scores)
+      setRound(null); setWordChoices(null); setRoundEnd(null)
     })
 
     s.on('game_reset', (data: any) => {

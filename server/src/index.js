@@ -271,6 +271,13 @@ class GameLogicProxy {
         system: true,
         message: `本轮结束！答案是: ${data.word} (${data.category})`,
       })
+      // Last round: emit game_end after 5s delay for results display
+      if (data.gameEnding) {
+        setTimeout(() => {
+          this.io.to(rid).emit('game_end', { type: 'game_end', finalScores: data.finalScores })
+          this.io.to(rid).emit('chat_message', { system: true, message: '游戏结束！' })
+        }, 5000)
+      }
     }
 
     this.logic._onNextRound = (rid, data) => {
