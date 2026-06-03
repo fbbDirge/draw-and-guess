@@ -124,7 +124,9 @@
 .game-over-card h2, .round-end-card h3, .word-picker-card h3 { text-align: center; margin-bottom: 10px; }
 .game-over-actions { display: flex; gap: 10px; margin-top: 16px; }
 .game-over-actions button { flex: 1; }
-.word-picker-sub { color: var(--text2); font-size: .85rem; margin-bottom: 16px; text-align: center; }
+.word-picker-sub { color: var(--text2); font-size: .85rem; margin-bottom: 8px; text-align: center; }
+.word-picker-timer { font-size: .85rem; margin-bottom: 16px; text-align: center; color: var(--primary); font-weight: 600; }
+.word-picker-timer.urgent { color: var(--danger, #e74c3c); }
 .word-choices { display: flex; flex-direction: column; gap: 8px; }
 .word-choice-btn { display: flex; flex-direction: column; align-items: center; padding: 14px; font-size: 1.1rem; width: 100%; }
 .word-category { font-size: .75rem; opacity: .7; }
@@ -213,6 +215,7 @@
   .player-chip .chip-rank { color: var(--text2); font-size: .7rem; }
   .player-chip .chip-name { max-width: 60px; overflow: hidden; text-overflow: ellipsis; }
   .player-chip .chip-score { font-weight: 700; color: var(--gold); margin-left: 2px; }
+  .player-chip .chip-guessed { color: var(--success, #2ecc71); font-weight: 700; font-size: .8rem; }
   .player-chip .chip-icon { font-size: .7rem; }
 
   /* Mobile chat: fixed at bottom with visible input */

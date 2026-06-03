@@ -24,6 +24,7 @@ export class RoomManager {
       currentWord: '',
       currentCategory: '',
       roundTimer: null,
+      pickTimer: null,
       guessedThisRound: new Set(),
       roundStartTime: 0,
       canvasVersion: 0,
@@ -225,6 +226,7 @@ export class GameLogic {
     this._onRoundEnd = null
     this._onWordChoices = null
     this._onTimerShorten = null
+    this._onPickTimeout = null
   }
 
   startGame(roomId) {
@@ -269,6 +271,23 @@ export class GameLogic {
     room.pendingWordChoices = choices
     room.pendingDrawerIndex = room.currentDrawerIndex
     room.wordRefreshLeft = 2
+
+    // Auto-skip if the drawer doesn't pick a word within 25s
+    if (room.pickTimer) clearTimeout(room.pickTimer)
+    room.pickTimer = this._setTimer(() => {
+      if (room.status !== 'playing' || !room.pendingWordChoices) return
+      const skipped = activePlayers[room.pendingDrawerIndex]
+      room.pendingWordChoices = null
+      room.pendingDrawerIndex = -1
+      if (this._onPickTimeout && skipped) this._onPickTimeout(room.id, skipped.name)
+      const nextData = this._prepareNextRound(room)
+      if (!nextData) return
+      if (nextData.type === 'game_end') {
+        if (this._onGameEnd) this._onGameEnd(room.id, nextData)
+      } else if (this._onNextRound) {
+        this._onNextRound(room.id, nextData)
+      }
+    }, 25000)
 
     return {
       type: 'word_pick',
@@ -326,6 +345,7 @@ export class GameLogic {
     }
 
     const chosen = room.pendingWordChoices[choiceIndex]
+    if (room.pickTimer) { clearTimeout(room.pickTimer); room.pickTimer = null }
     room.currentWord = chosen.word
     room.currentCategory = chosen.category
     room.pendingWordChoices = null
@@ -506,6 +526,8 @@ export class GameLogic {
     room.pendingDrawerIndex = -1
     if (room.roundTimer) clearTimeout(room.roundTimer)
     room.roundTimer = null
+    if (room.pickTimer) clearTimeout(room.pickTimer)
+    room.pickTimer = null
 
     for (const player of room.players.values()) {
       player.isReady = player.isHost || player.role === 'spectator'

@@ -451,6 +451,13 @@ class GameLogicProxy {
     this.logic._onTimerShorten = (rid, newTime) => {
       this.io.to(rid).emit('timer_shorten', { seconds: newTime })
     }
+
+    this.logic._onPickTimeout = (rid, drawerName) => {
+      this.io.to(rid).emit('chat_message', {
+        system: true,
+        message: `${drawerName} 选词超时，自动跳过`,
+      })
+    }
   }
 
   start(room) {

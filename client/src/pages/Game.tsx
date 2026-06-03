@@ -9,19 +9,19 @@ import './Game.css'
 const COLORS = ['#000000', '#e74c3c', '#e67e22', '#f1c40f', '#2ecc71', '#3498db', '#9b59b6', '#1abc9c', '#34495e', '#fff']
 const SIZES = [2, 4, 6, 10]
 
-function PlayerStrip({ players, scores, myPlayerId, drawerId, lastCorrectId }: {
-  players: any[]; scores: Record<string, number>; myPlayerId: string; drawerId?: string; lastCorrectId: string
+function PlayerStrip({ players, scores, myPlayerId, drawerId, lastCorrectId, correctIds }: {
+  players: any[]; scores: Record<string, number>; myPlayerId: string; drawerId?: string; lastCorrectId: string; correctIds: string[]
 }) {
-  const list = players.map((p: any) => ({ ...p, score: scores[p.id] || 0 }))
-  list.sort((a: any, b: any) => b.score - a.score)
+  const list = players.map((p: any, i: number) => ({ ...p, seat: i + 1, score: scores[p.id] || 0 }))
   return (
     <div className="player-strip">
-      {list.map((p: any, i: number) => (
+      {list.map((p: any) => (
         <div key={p.id} className={`player-chip ${p.id === myPlayerId ? 'me' : ''} ${p.id === lastCorrectId ? 'correct-flash' : ''}`}>
-          <span className="chip-rank">#{i + 1}</span>
+          <span className="chip-rank">#{p.seat}</span>
           {p.id === drawerId && <span className="chip-icon">✏️</span>}
           {p.isHost && <span className="chip-icon">👑</span>}
           <span className="chip-name">{p.name}</span>
+          {correctIds.includes(p.id) && <span className="chip-guessed">✓</span>}
           <span className="chip-score">{p.score}</span>
         </div>
       ))}
@@ -86,6 +86,16 @@ export default function Game({ ctx }: any) {
   const canvasRef = useRef<CanvasHandle>(null)
   const timerRef = useRef<NodeJS.Timeout | null>(null)
   const [triedJoin, setTriedJoin] = useState(false)
+  const [pickCountdown, setPickCountdown] = useState(0)
+
+  useEffect(() => {
+    if (!wordChoices) { setPickCountdown(0); return }
+    setPickCountdown(25)
+    const t = setInterval(() => {
+      setPickCountdown((c) => (c <= 1 ? 0 : c - 1))
+    }, 1000)
+    return () => clearInterval(t)
+  }, [wordChoices?.drawerId, wordChoices?.round, wordChoices?.refreshLeft])
 
   useEffect(() => {
     if (!connected) { connect(); return }
@@ -202,6 +212,7 @@ export default function Game({ ctx }: any) {
           <div className="word-picker-card">
             <h3>选择要画的词</h3>
             <p className="word-picker-sub">画家: {wordChoices.drawerName} · 第 {wordChoices.round}/{wordChoices.totalRounds} 轮</p>
+            <p className={`word-picker-timer ${pickCountdown <= 10 ? 'urgent' : ''}`}>{pickCountdown}秒内选词，超时自动跳过</p>
             <div className="word-choices">
               {wordChoices.choices.map((c, i) => (
                 <button key={i} className="btn-primary word-choice-btn" onClick={() => handlePickWord(i)}>
@@ -299,7 +310,7 @@ export default function Game({ ctx }: any) {
               </div>
             </div>
           )}
-          <PlayerStrip players={activePlayers} scores={scores} myPlayerId={myPlayerId} drawerId={round?.drawerId} lastCorrectId={lastCorrectId} />
+          <PlayerStrip players={activePlayers} scores={scores} myPlayerId={myPlayerId} drawerId={round?.drawerId} lastCorrectId={lastCorrectId} correctIds={roundCorrectIds} />
           {spectators.length > 0 && (
             <div className="spectator-strip">
               <span className="spectator-strip-label">👁 观众 {spectators.length}:</span>
