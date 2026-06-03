@@ -1,0 +1,59 @@
+
+> draw-and-guess-client@1.0.0 dev
+> vite --host 0.0.0.0
+
+
+  [32m[1mVITE[22m v5.4.21[39m  [2mready in [0m[1m312[22m[2m[0m ms[22m
+
+  [32m➜[39m  [1mLocal[22m:   [36mhttp://localhost:[1m3000[22m/[39m
+  [32m➜[39m  [1mNetwork[22m: [36mhttp://192.168.1.77:[1m3000[22m/[39m
+  [32m➜[39m  [1mNetwork[22m: [36mhttp://172.23.176.1:[1m3000[22m/[39m
+[2m10:26:39[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/App.tsx[22m
+[2m10:27:30[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/App.tsx[22m
+[2m10:28:27[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/App.tsx[22m
+[2m10:59:06[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/App.tsx[22m
+[2m10:59:13[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/App.tsx[22m
+[2m10:59:24[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/App.tsx[22m
+[2m10:59:33[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/App.tsx[22m
+[2m10:59:40[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/App.tsx[22m
+[2m10:59:44[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/App.tsx[22m
+[2m10:59:49[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/App.tsx[22m
+[2m10:59:55[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/App.tsx[22m
+[2m10:59:59[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/App.tsx[22m
+[2m11:00:14[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/App.tsx[22m
+[2m11:00:20[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/App.tsx[22m
+[2m11:00:24[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/App.tsx[22m
+[2m11:00:37[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/App.tsx[22m
+[2m11:00:41[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/pages/Room.tsx[22m
+[2m11:00:46[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/pages/Room.tsx[22m
+[2m11:00:51[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/pages/Game.tsx[22m
+[2m11:00:56[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/pages/Game.tsx[22m
+[2m11:01:34[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/App.tsx[22m
+[2m11:13:11[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/App.tsx, /src/pages/Home.tsx, /src/pages/Room.tsx, /src/pages/Game.tsx[22m
+[2m11:20:40[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/App.tsx[22m
+[2m11:21:07[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/App.tsx[22m
+[2m11:27:18[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/pages/Room.tsx[22m
+[2m11:27:35[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/pages/Room.tsx[22m
+[2m11:27:51[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/pages/Room.tsx[22m
+[2m11:36:48[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/App.tsx[22m
+[2m11:37:03[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/pages/Room.tsx[22m
+[2m11:37:10[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/pages/Room.tsx[22m
+[2m11:37:17[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/pages/Room.tsx[22m
+[2m11:37:27[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/pages/Room.tsx[22m
+[2m11:37:36[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/pages/Room.tsx[22m
+[2m11:38:04[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/pages/Room.tsx[22m
+[2m11:38:16[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/pages/Room.tsx[22m
+[2m11:38:25[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/pages/Room.tsx[22m
+[2m11:38:34[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/pages/Game.tsx[22m
+[2m11:38:44[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/pages/Game.tsx[22m
+[2m11:38:53[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/pages/Game.tsx[22m
+[2m11:39:02[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/pages/Game.tsx[22m
+[2m11:39:11[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/pages/Game.tsx[22m
+[2m11:39:19[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/pages/Game.tsx[22m
+[2m11:51:57[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/pages/Game.tsx[22m
+[2m11:52:19[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/pages/Game.tsx[22m
+[2m12:29:09[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/pages/Game.tsx[22m
+[2m12:29:22[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/pages/Game.tsx[22m
+[2m12:30:17[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/pages/Game.tsx[22m
+[2m12:30:32[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/pages/Game.css[22m
+[2m12:30:48[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/pages/Game.css[22m

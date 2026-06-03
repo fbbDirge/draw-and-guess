@@ -5,7 +5,7 @@ import { getPlayerToken } from '../utils/storage'
 const SOCKET_URL = import.meta.env.VITE_SERVER_URL || ''
 
 export interface Player {
-  id: string; name: string; isHost: boolean; isReady: boolean; score: number
+  id: string; name: string; isHost: boolean; isReady: boolean; role?: 'player' | 'spectator'; score: number; connected?: boolean; token?: string
 }
 
 export interface RoomState {
@@ -68,9 +68,33 @@ export function useSocket() {
   const gameEndTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const [error, setError] = useState<string>('')
   const playerTokenRef = useRef(getPlayerToken())
+  const roomRef = useRef<RoomState | null>(null)
+  const myPlayerIdRef = useRef('')
 
   const addChat = useCallback((msg: ChatMessage) => {
     setChatMessages((prev) => [...prev.slice(-200), msg])
+  }, [])
+
+  const syncRoom = useCallback((nextRoom: RoomState | null, nextPlayer?: Player | null) => {
+    roomRef.current = nextRoom
+    setRoom(nextRoom)
+
+    if (!nextRoom) {
+      myPlayerIdRef.current = ''
+      setMyPlayerId('')
+      setMyPlayer(null)
+      return
+    }
+
+    const me = nextPlayer || nextRoom.players.find((p) => p.id === myPlayerIdRef.current)
+      || nextRoom.players.find((p) => p.id === playerTokenRef.current || p.token === playerTokenRef.current)
+      || null
+
+    if (me) {
+      myPlayerIdRef.current = me.id
+      setMyPlayerId(me.id)
+      setMyPlayer(me)
+    }
   }, [])
 
   const connect = useCallback(() => {
@@ -81,28 +105,36 @@ export function useSocket() {
     })
     socketRef.current = s
 
-    s.on('connect', () => setConnected(true))
+    s.on('connect', () => {
+      setConnected(true)
+      const currentRoom = roomRef.current
+      if (currentRoom?.id) {
+        const username = localStorage.getItem('ddg_username') || '玩家'
+        s.emit('join_room', {
+          roomId: currentRoom.id,
+          username,
+          playerToken: playerTokenRef.current,
+        })
+      }
+    })
     s.on('disconnect', () => setConnected(false))
 
     s.on('room_created', (data: any) => {
-      setRoom(data.room); setMyPlayerId(data.player.id); setMyPlayer(data.player)
+      syncRoom(data.room, data.player)
       addChat({ system: true, message: `房间 ${data.roomId} 创建成功` })
     })
 
     s.on('room_joined', (data: any) => {
-      setRoom(data.room); setMyPlayerId(data.player.id); setMyPlayer(data.player)
+      syncRoom(data.room, data.player)
+      if (data.roomId || data.room?.id) s.emit('get_room_state', { roomId: data.roomId || data.room.id })
     })
 
     s.on('kicked', (data: any) => {
-      setRoom(null); setMyPlayer(null); setError(data.message || '你被移出房间'); s.disconnect()
+      syncRoom(null); setError(data.message || '你被移出房间'); s.disconnect()
     })
 
     s.on('room_update', (data: any) => {
-      setRoom(data.room)
-      if (data.room?.players) {
-        const me = data.room.players.find((p: Player) => p.id === s.id)
-        if (me) { setMyPlayer(me); setMyPlayerId(me.id) }
-      }
+      syncRoom(data.room)
     })
 
     s.on('game_starting', (data: any) => setCountdown(data.countdown))
@@ -147,6 +179,14 @@ export function useSocket() {
       setCanvasStrokes((prev) => prev.filter((seg: any) => seg?.strokeId !== strokeId))
     })
 
+    s.on('canvas_state', (data: any) => {
+      const nextVersion = data?.canvasVersion || 0
+      canvasVersionRef.current = nextVersion
+      setCanvasVersion(nextVersion)
+      setCanvasStrokes(Array.isArray(data?.strokes) ? data.strokes : [])
+      setLastClear(Date.now())
+    })
+
     s.on('guess_result', (data: any) => {
       if (data.scores) setScores(data.scores)
       if (data.correct && data.playerId) {
@@ -184,7 +224,7 @@ export function useSocket() {
 
     s.on('game_reset', (data: any) => {
       if (gameEndTimerRef.current) { clearTimeout(gameEndTimerRef.current); gameEndTimerRef.current = null }
-      setRoom(data.room); setRound(null); setRoundEnd(null); setWordChoices(null)
+      syncRoom(data.room); setRound(null); setRoundEnd(null); setWordChoices(null)
       setGameOver(false); setFinalScores([]); setCanvasStrokes([]); setScores({})
       setCountdown(-1)
       canvasVersionRef.current = 0
@@ -194,9 +234,9 @@ export function useSocket() {
 
     s.on('chat_message', (data: ChatMessage) => addChat(data))
     s.on('error', (data: any) => setError(data.message))
-    s.on('room_closed', (data: any) => { setRoom(null); setError(data.message) })
-    s.on('left_room', () => { setRoom(null); setRound(null) })
-  }, [addChat])
+    s.on('room_closed', (data: any) => { syncRoom(null); setError(data.message) })
+    s.on('left_room', () => { syncRoom(null); setRound(null) })
+  }, [addChat, syncRoom])
 
   const emit = useCallback((event: string, data?: any) => {
     socketRef.current?.emit(event, { ...data, playerToken: playerTokenRef.current })
@@ -205,10 +245,10 @@ export function useSocket() {
   const leaveRoom = useCallback(() => {
     socketRef.current?.emit('leave_room', { playerToken: playerTokenRef.current })
     if (gameEndTimerRef.current) { clearTimeout(gameEndTimerRef.current); gameEndTimerRef.current = null }
-    setRoom(null); setRound(null); setRoundEnd(null); setWordChoices(null)
+    syncRoom(null); setRound(null); setRoundEnd(null); setWordChoices(null)
     setGameOver(false); setFinalScores([]); setCanvasStrokes([]); setScores({})
     setCountdown(-1); canvasVersionRef.current = 0; setCanvasVersion(0)
-  }, [])
+  }, [syncRoom])
 
   const clearError = useCallback(() => setError(''), [])
 

@@ -1,0 +1,3 @@
+[2026-06-03T11:02:55.524+08:00] CLI invoked: midscene-web connect --url http://localhost:3001
+[2026-06-03T11:02:55.543+08:00] command: connect, args: {"url":"http://localhost:3001"}
+[2026-06-03T11:02:58.054+08:00] command connect completed, isError: false

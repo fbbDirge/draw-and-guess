@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
+import { getPlayerToken } from '../utils/storage'
 import ScoreBoard from '../components/ScoreBoard'
 import './Room.css'
 
@@ -11,6 +12,7 @@ export default function Room({ ctx }: any) {
   const { id } = useParams()
   const navigate = useNavigate()
   const [copied, setCopied] = useState(false)
+  const [copyError, setCopyError] = useState('')
   const [triedJoin, setTriedJoin] = useState(false)
 
   // Try to join the room on mount or reconnect
@@ -22,7 +24,7 @@ export default function Room({ ctx }: any) {
     if (!room && !triedJoin) {
       setTriedJoin(true)
       const username = localStorage.getItem('ddg_username') || '玩家'
-      emit('join_room', { roomId: id, username })
+      emit('join_room', { roomId: id, username, playerToken: getPlayerToken() })
     }
   }, [connected, room, triedJoin, id, emit, connect])
 
@@ -40,11 +42,45 @@ export default function Room({ ctx }: any) {
     }
   }, [error, clearError])
 
-  function copyRoomId() {
-    if (room?.id) {
-      navigator.clipboard.writeText(room.id).catch(() => {})
+  async function copyRoomId() {
+    if (!room?.id) return
+
+    const ok = await copyText(room.id)
+    if (ok) {
       setCopied(true)
+      setCopyError('')
       setTimeout(() => setCopied(false), 2000)
+      return
+    }
+
+    setCopyError(`复制失败，请手动复制房号 ${room.id}`)
+    setTimeout(() => setCopyError(''), 3000)
+  }
+
+  async function copyText(text: string) {
+    try {
+      if (navigator.clipboard?.writeText) {
+        await navigator.clipboard.writeText(text)
+        return true
+      }
+    } catch {}
+
+    try {
+      const textarea = document.createElement('textarea')
+      textarea.value = text
+      textarea.readOnly = true
+      textarea.style.position = 'fixed'
+      textarea.style.left = '-9999px'
+      textarea.style.top = '0'
+      document.body.appendChild(textarea)
+      textarea.focus()
+      textarea.select()
+      textarea.setSelectionRange(0, text.length)
+      const ok = document.execCommand('copy')
+      document.body.removeChild(textarea)
+      return ok
+    } catch {
+      return false
     }
   }
 
@@ -65,7 +101,10 @@ export default function Room({ ctx }: any) {
     )
   }
 
-  const notReadyCount = room.players.filter((p: any) => !p.isReady).length
+  const activePlayers = room.players.filter((p: any) => p.role !== 'spectator')
+  const spectators = room.players.filter((p: any) => p.role === 'spectator')
+  const notReadyCount = activePlayers.filter((p: any) => !p.isReady && !p.isHost).length
+  const isSpectator = myPlayer?.role === 'spectator'
 
   return (
     <div className="page room-page">
@@ -77,9 +116,11 @@ export default function Room({ ctx }: any) {
           <button className="btn-sm btn-outline" onClick={copyRoomId}>
             {copied ? '已复制' : '复制房号'}
           </button>
+          {copyError && <p style={{ color: 'var(--danger)', fontSize: '.8rem', marginTop: 6 }}>{copyError}</p>}
         </div>
         <div className="room-meta">
-          <span>{room.players.length}/{room.maxPlayers}人</span>
+          <span>玩家 {activePlayers.length}/{room.maxPlayers}</span>
+          <span>观众 {spectators.length}</span>
           <span>每轮{room.roundTime}秒</span>
         </div>
       </div>
@@ -89,7 +130,7 @@ export default function Room({ ctx }: any) {
           <div className="card">
             <h3>玩家列表</h3>
             <div className="player-list">
-              {room.players.map((p: any) => (
+              {activePlayers.map((p: any) => (
                 <div key={p.id} className={`player-item ${p.id === myPlayerId ? 'me' : ''}`}>
                   <div className="player-info">
                     <span className="player-name">
@@ -108,16 +149,47 @@ export default function Room({ ctx }: any) {
               ))}
             </div>
 
+            {spectators.length > 0 && (
+              <>
+                <h3 style={{ marginTop: 18 }}>观众席</h3>
+                <div className="player-list">
+                  {spectators.map((p: any) => (
+                    <div key={p.id} className={`player-item ${p.id === myPlayerId ? 'me' : ''}`}>
+                      <div className="player-info">
+                        <span className="player-name">
+                          {p.name}
+                          <span className="badge badge-waiting">观众</span>
+                        </span>
+                      </div>
+                      {isHost && (
+                        <button className="btn-danger btn-sm" onClick={() => emit('kick_player', { playerId: p.id })}>
+                          踢出
+                        </button>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              </>
+            )}
+
             <div className="room-actions">
               {isHost ? (
                 <button
                   className="btn-primary"
                   onClick={() => emit('start_game')}
-                  disabled={room.players.length < 2 || notReadyCount > 0}
+                  disabled={activePlayers.length < 2 || notReadyCount > 0}
                 >
-                  {room.players.length < 2 ? '至少需要2名玩家' :
+                  {activePlayers.length < 2 ? '至少需要2名玩家' :
                    notReadyCount > 0 ? `还有${notReadyCount}人未准备` :
                    '开始游戏'}
+                </button>
+              ) : isSpectator ? (
+                <button
+                  className="btn-outline"
+                  onClick={() => emit('switch_role', { role: 'player' })}
+                  disabled={room.status !== 'waiting'}
+                >
+                  {room.status === 'waiting' ? '加入玩家席' : '游戏中观战'}
                 </button>
               ) : (
                 <button
@@ -126,6 +198,11 @@ export default function Room({ ctx }: any) {
                   disabled={isHost}
                 >
                   {isHost ? '房主自动准备' : (myPlayer?.isReady ? '取消准备' : '准备')}
+                </button>
+              )}
+              {!isHost && !isSpectator && room.status === 'waiting' && (
+                <button className="btn-outline" onClick={() => emit('switch_role', { role: 'spectator' })}>
+                  去观众席
                 </button>
               )}
               <button className="btn-outline" onClick={() => { leaveRoom(); navigate('/') }}>
@@ -137,8 +214,8 @@ export default function Room({ ctx }: any) {
 
         <div className="room-sidebar">
           <ScoreBoard
-            scores={room.players.reduce((acc: any, p: any) => { acc[p.id] = p.score; return acc }, {})}
-            players={room.players}
+            scores={activePlayers.reduce((acc: any, p: any) => { acc[p.id] = p.score; return acc }, {})}
+            players={activePlayers}
             finalScores={[]}
           />
           <div className="card room-chat">

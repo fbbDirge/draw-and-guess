@@ -6,8 +6,9 @@ export class RoomManager {
     this.rooms = new Map()
   }
 
-  createRoom(hostId, hostName, hostToken, maxPlayers = 8, roundTime = 60) {
+  createRoom(socketId, hostName, hostToken, maxPlayers = 8, roundTime = 60) {
     const id = this._generateRoomId()
+    const hostId = hostToken || uuidv4()
     const room = {
       id,
       maxPlayers: Math.min(20, Math.max(2, maxPlayers)),
@@ -26,6 +27,7 @@ export class RoomManager {
       guessedThisRound: new Set(),
       roundStartTime: 0,
       canvasVersion: 0,
+      canvasStrokes: [],
       pendingWordChoices: null,
       pendingDrawerIndex: -1,
       wordRefreshLeft: 0,
@@ -33,12 +35,13 @@ export class RoomManager {
     }
 
     const player = {
-      id: hostId, name: hostName, token: hostToken,
-      isHost: true, isReady: true, score: 0, connected: true, joinedAt: Date.now(),
+      id: hostId, socketId, name: hostName, token: hostToken,
+      isHost: true, isReady: true, role: 'player', score: 0, connected: true, joinedAt: Date.now(),
+      disconnectedAt: 0, disconnectTimer: null,
     }
 
     room.players.set(hostId, player)
-    room.playerTokens.set(hostToken, hostId)
+    if (hostToken) room.playerTokens.set(hostToken, hostId)
     this.rooms.set(id, room)
     return { room, player, roomId: id }
   }
@@ -51,36 +54,30 @@ export class RoomManager {
       const existingId = room.playerTokens.get(playerToken)
       const existing = room.players.get(existingId)
       if (existing) {
-        room.players.delete(existingId)
-        room.playerTokens.delete(playerToken)
-        existing.id = socketId
+        if (existing.disconnectTimer) clearTimeout(existing.disconnectTimer)
+        existing.disconnectTimer = null
+        existing.socketId = socketId
+        existing.name = playerName || existing.name
         existing.connected = true
-        room.players.set(socketId, existing)
-        room.playerTokens.set(playerToken, socketId)
-        if (existing.isHost) room.hostId = socketId
-        if (room.scores[existingId] !== undefined) {
-          room.scores[socketId] = room.scores[existingId]
-          delete room.scores[existingId]
-        }
-        if (room.guessedThisRound.has(existingId)) {
-          room.guessedThisRound.delete(existingId)
-          room.guessedThisRound.add(socketId)
-        }
+        existing.disconnectedAt = 0
         return { room, player: existing, reconnected: true }
       }
+      room.playerTokens.delete(playerToken)
     }
 
-    if (room.status !== 'waiting') return { error: '游戏已开始，无法加入' }
-    if (room.players.size >= room.maxPlayers) return { error: '房间已满' }
+    const role = room.status === 'waiting' ? 'player' : 'spectator'
+    if (role === 'player' && this._activePlayers(room).length >= room.maxPlayers) return { error: '房间已满' }
 
+    const playerId = playerToken || uuidv4()
     const player = {
-      id: socketId, name: playerName, token: playerToken,
-      isHost: false, isReady: false, score: 0, connected: true, joinedAt: Date.now(),
+      id: playerId, socketId, name: playerName, token: playerToken,
+      isHost: false, isReady: role === 'spectator', role, score: 0, connected: true, joinedAt: Date.now(),
+      disconnectedAt: 0, disconnectTimer: null,
     }
 
-    room.players.set(socketId, player)
-    if (playerToken) room.playerTokens.set(playerToken, socketId)
-    room.scores[socketId] = 0
+    room.players.set(playerId, player)
+    if (playerToken) room.playerTokens.set(playerToken, playerId)
+    room.scores[playerId] = 0
     return { room, player, reconnected: false }
   }
 
@@ -91,6 +88,7 @@ export class RoomManager {
     if (playerId === hostId) return { error: '不能踢出自己' }
     const player = room.players.get(playerId)
     if (!player) return { error: '玩家不在房间中' }
+    if (player.disconnectTimer) clearTimeout(player.disconnectTimer)
     room.players.delete(playerId)
     if (player.token) room.playerTokens.delete(player.token)
     delete room.scores[playerId]
@@ -104,21 +102,46 @@ export class RoomManager {
     const player = room.players.get(playerId)
     if (!player) return null
     const wasHost = player.isHost
+    if (player.disconnectTimer) clearTimeout(player.disconnectTimer)
     room.players.delete(playerId)
     room.guessedThisRound.delete(playerId)
     delete room.scores[playerId]
+    if (player.token) room.playerTokens.delete(player.token)
 
-    if (wasHost && room.players.size > 0) {
-      const newHost = room.players.values().next().value
+    if (wasHost && this._activePlayers(room).length > 0) {
+      for (const p of room.players.values()) p.isHost = false
+      const newHost = this._activePlayers(room)[0]
       newHost.isHost = true
+      newHost.isReady = true
       room.hostId = newHost.id
     }
 
-    if (room.players.size === 0) {
+    if (this._activePlayers(room).length === 0) {
       this.rooms.delete(roomId)
       return { wasHost, room: null, roomEmpty: true }
     }
     return { playerName: player.name, wasHost, room }
+  }
+
+  markDisconnected(socketId) {
+    for (const [roomId, room] of this.rooms) {
+      for (const player of room.players.values()) {
+        if (player.socketId !== socketId) continue
+        player.connected = false
+        player.disconnectedAt = Date.now()
+        return { roomId, room, player }
+      }
+    }
+    return null
+  }
+
+  getBySocketId(socketId) {
+    for (const [roomId, room] of this.rooms) {
+      for (const player of room.players.values()) {
+        if (player.socketId === socketId) return { roomId, room, player }
+      }
+    }
+    return null
   }
 
   getRoom(roomId) { return this.rooms.get(roomId) || null }
@@ -128,6 +151,7 @@ export class RoomManager {
     if (!room) return { error: '房间不存在' }
     const player = room.players.get(playerId)
     if (!player) return { error: '你不在房间中' }
+    if (player.role === 'spectator') return { error: '观众无需准备' }
     player.isReady = !player.isReady
     return { player, room }
   }
@@ -136,10 +160,38 @@ export class RoomManager {
     const room = this.rooms.get(roomId)
     if (!room) return { error: '房间不存在' }
     if (room.hostId !== hostId) return { error: '仅房主可开始游戏' }
-    if (room.players.size < 2) return { error: '至少需要2名玩家' }
-    const notReady = [...room.players.values()].filter(p => !p.isReady && !p.isHost)
+    const activePlayers = this._activePlayers(room)
+    if (activePlayers.length < 2) return { error: '至少需要2名玩家' }
+    const notReady = activePlayers.filter(p => !p.isReady && !p.isHost)
     if (notReady.length > 0) return { error: `${notReady.map(p => p.name).join(', ')} 未准备` }
     return { ok: true }
+  }
+
+  switchRole(roomId, playerId, role) {
+    const room = this.rooms.get(roomId)
+    if (!room) return { error: '房间不存在' }
+    const player = room.players.get(playerId)
+    if (!player) return { error: '你不在房间中' }
+    if (player.isHost && role === 'spectator') return { error: '房主不能切换为观众' }
+    if (!['player', 'spectator'].includes(role)) return { error: '身份无效' }
+    if (player.role === role) return { room, player }
+    if (role === 'player') {
+      if (room.status !== 'waiting') return { error: '游戏已开始，不能加入玩家席' }
+      if (this._activePlayers(room).length >= room.maxPlayers) return { error: '房间已满' }
+      player.role = 'player'
+      player.isReady = false
+      room.scores[playerId] = room.scores[playerId] || 0
+    } else {
+      player.role = 'spectator'
+      player.isReady = true
+      room.guessedThisRound.delete(playerId)
+      delete room.scores[playerId]
+    }
+    return { room, player }
+  }
+
+  _activePlayers(room) {
+    return [...room.players.values()].filter(p => p.role !== 'spectator')
   }
 
   _generateRoomId() {
@@ -181,9 +233,10 @@ export class GameLogic {
 
     room.status = 'playing'
     room.currentRound = 0
-    room.totalRounds = room.players.size
+    const activePlayers = this.roomManager._activePlayers(room)
+    room.totalRounds = activePlayers.length
     room.scores = {}
-    for (const pid of room.players.keys()) room.scores[pid] = 0
+    for (const player of activePlayers) room.scores[player.id] = 0
     room.currentDrawerIndex = -1
     return this._prepareNextRound(room)
   }
@@ -194,10 +247,11 @@ export class GameLogic {
     }
 
     room.currentRound++
-    room.currentDrawerIndex = (room.currentDrawerIndex + 1) % room.players.size
+    const activePlayers = this.roomManager._activePlayers(room)
+    room.currentDrawerIndex = (room.currentDrawerIndex + 1) % activePlayers.length
     room.guessedThisRound = new Set()
 
-    const drawer = [...room.players.values()][room.currentDrawerIndex]
+    const drawer = activePlayers[room.currentDrawerIndex]
 
     // Generate 4 unique word choices
     const choices = []
@@ -231,7 +285,7 @@ export class GameLogic {
   refreshWordChoices(roomId, playerId) {
     const room = this.roomManager.getRoom(roomId)
     if (!room || room.status !== 'playing') return { error: '状态异常' }
-    const drawer = [...room.players.values()][room.pendingDrawerIndex]
+    const drawer = this.roomManager._activePlayers(room)[room.pendingDrawerIndex]
     if (!drawer || drawer.id !== playerId) return { error: '你不是当前画家' }
     if (room.wordRefreshLeft <= 0) return { error: '换词次数已用完' }
 
@@ -265,7 +319,7 @@ export class GameLogic {
     const room = this.roomManager.getRoom(roomId)
     if (!room || room.status !== 'playing') return { error: '游戏状态异常' }
 
-    const drawer = [...room.players.values()][room.pendingDrawerIndex]
+    const drawer = this.roomManager._activePlayers(room)[room.pendingDrawerIndex]
     if (!drawer || drawer.id !== playerId) return { error: '你不是当前画家' }
     if (!room.pendingWordChoices || choiceIndex < 0 || choiceIndex >= room.pendingWordChoices.length) {
       return { error: '选择无效' }
@@ -278,6 +332,7 @@ export class GameLogic {
     room.pendingDrawerIndex = -1
     room.roundStartTime = Date.now()
     room.canvasVersion += 1
+    room.canvasStrokes = []
 
     // Start round timer
     if (room.roundTimer) clearTimeout(room.roundTimer)
@@ -303,7 +358,9 @@ export class GameLogic {
     const room = this.roomManager.getRoom(roomId)
     if (!room || room.status !== 'playing') return { error: '游戏未在进行' }
 
-    const drawer = [...room.players.values()][room.currentDrawerIndex]
+    const activePlayers = this.roomManager._activePlayers(room)
+    const drawer = activePlayers[room.currentDrawerIndex]
+    if (!activePlayers.some(p => p.id === playerId)) return { error: '观众不能猜词' }
     if (playerId === drawer?.id) return { error: '你是画家，不能猜词' }
     if (room.guessedThisRound.has(playerId)) return { error: '本轮已猜对' }
 
@@ -315,12 +372,12 @@ export class GameLogic {
       const elapsed = (Date.now() - room.roundStartTime) / 1000
       const timeRatio = 1 - (elapsed / room.roundTime)
       const guesserPoints = Math.max(10, Math.round(50 * timeRatio))
-      const drawerPoints = Math.round(30 * (room.guessedThisRound.size / (room.players.size - 1)))
+      const drawerPoints = Math.round(30 * (room.guessedThisRound.size / (activePlayers.length - 1)))
 
       room.scores[playerId] = (room.scores[playerId] || 0) + guesserPoints
       room.scores[drawer.id] = (room.scores[drawer.id] || 0) + drawerPoints
 
-      const totalGuessers = room.players.size - 1
+      const totalGuessers = activePlayers.length - 1
       const correctCount = room.guessedThisRound.size
       const remainingGuessers = totalGuessers - correctCount
 
@@ -356,7 +413,7 @@ export class GameLogic {
     if (room.roundTimer) clearTimeout(room.roundTimer)
     if (room.status !== 'playing') return null
 
-    const drawer = [...room.players.values()][room.currentDrawerIndex]
+    const drawer = this.roomManager._activePlayers(room)[room.currentDrawerIndex]
     const correctCount = room.guessedThisRound.size
     const drawerBonus = correctCount * 10
     if (drawer) {
@@ -439,15 +496,16 @@ export class GameLogic {
     room.guessedThisRound = new Set()
     room.scores = {}
     room.canvasVersion = 0
+    room.canvasStrokes = []
     room.pendingWordChoices = null
     room.pendingDrawerIndex = -1
     if (room.roundTimer) clearTimeout(room.roundTimer)
     room.roundTimer = null
 
     for (const player of room.players.values()) {
-      player.isReady = false
+      player.isReady = player.isHost || player.role === 'spectator'
       player.score = 0
-      room.scores[player.id] = 0
+      if (player.role !== 'spectator') room.scores[player.id] = 0
     }
 
     return { ok: true }

@@ -1,5 +1,6 @@
 import { useEffect, useState, useRef, useCallback } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
+import { getPlayerToken } from '../utils/storage'
 import Canvas, { CanvasHandle } from '../components/Canvas'
 import Chat from '../components/Chat'
 import ScoreBoard from '../components/ScoreBoard'
@@ -91,7 +92,7 @@ export default function Game({ ctx }: any) {
     if (!room && !gameOver && !triedJoin) {
       setTriedJoin(true)
       const username = localStorage.getItem('ddg_username') || '玩家'
-      emit('join_room', { roomId: id, username })
+      emit('join_room', { roomId: id, username, playerToken: getPlayerToken() })
     }
   }, [connected, room, gameOver, triedJoin, id, emit, connect])
 
@@ -156,9 +157,6 @@ export default function Game({ ctx }: any) {
   const handleRefreshWords = useCallback(() => emit('refresh_words'), [emit])
   const handleNextRound = useCallback(() => emit('next_round'), [emit])
 
-  const isDrawer = round?.isDrawer ?? false
-  const isHost = myPlayerId === room?.hostId
-
   if (!room) {
     return (
       <div className="page game-page">
@@ -170,6 +168,12 @@ export default function Game({ ctx }: any) {
     )
   }
 
+  const activePlayers = room.players.filter((p: any) => p.role !== 'spectator')
+  const spectators = room.players.filter((p: any) => p.role === 'spectator')
+  const isSpectator = room.players.find((p: any) => p.id === myPlayerId)?.role === 'spectator'
+  const isDrawer = !isSpectator && (round?.isDrawer ?? false)
+  const isHost = myPlayerId === room?.hostId
+
   return (
     <div className="page game-page">
       {error && <div className="error-toast" onClick={clearError}>{error}</div>}
@@ -178,7 +182,7 @@ export default function Game({ ctx }: any) {
         <div className="game-over-overlay">
           <div className="game-over-card">
             <h2>游戏结束</h2>
-            <ScoreBoard scores={scores} players={room.players}
+            <ScoreBoard scores={scores} players={activePlayers}
               finalScores={finalScores} />
             <div className="game-over-actions">
               {isHost && <button className="btn-primary" onClick={() => emit('play_again')}>再来一局</button>}
@@ -221,7 +225,7 @@ export default function Game({ ctx }: any) {
             <p className="round-end-drawer">画家: {roundEnd.drawerName}</p>
             {roundEnd.correctGuessers.length > 0 && (
               <p className="round-end-guessers">
-                猜对: {roundEnd.correctGuessers.map((pid: string) => room.players.find(p => p.id === pid)?.name).join(', ')}
+                猜对: {roundEnd.correctGuessers.map((pid: string) => activePlayers.find((p: any) => p.id === pid)?.name).join(', ')}
               </p>
             )}
             {snapshot && <div className="round-end-snapshot"><img src={snapshot} alt="画作" /></div>}
@@ -290,16 +294,34 @@ export default function Game({ ctx }: any) {
               </div>
             </div>
           )}
-          <PlayerStrip players={room.players} scores={scores} myPlayerId={myPlayerId} drawerId={round?.drawerId} lastCorrectId={lastCorrectId} />
+          <PlayerStrip players={activePlayers} scores={scores} myPlayerId={myPlayerId} drawerId={round?.drawerId} lastCorrectId={lastCorrectId} />
+          {spectators.length > 0 && (
+            <div className="spectator-strip">
+              <span className="spectator-strip-label">👁 观众 {spectators.length}:</span>
+              {spectators.map((s: any) => (
+                <span key={s.id} className={`spectator-strip-chip ${s.id === myPlayerId ? 'me' : ''}`}>{s.name}</span>
+              ))}
+            </div>
+          )}
         </div>
 
         <div className="game-sidebar">
-          <ScoreBoard scores={scores} players={room.players} finalScores={finalScores} drawerId={round?.drawerId} />
-          <Chat messages={chatMessages} onGuess={handleGuess} disabled={isDrawer || gameOver || !round} />
+          <ScoreBoard scores={scores} players={activePlayers} finalScores={finalScores} drawerId={round?.drawerId} />
+          {spectators.length > 0 && (
+            <div className="spectator-box">
+              <span className="spectator-title">观众席 ({spectators.length})</span>
+              <div className="spectator-names">
+                {spectators.map((s: any) => (
+                  <span key={s.id} className={`spectator-chip ${s.id === myPlayerId ? 'me' : ''}`}>👁 {s.name}</span>
+                ))}
+              </div>
+            </div>
+          )}
+          <Chat messages={chatMessages} onGuess={handleGuess} disabled={isSpectator || isDrawer || gameOver || !round} />
         </div>
       </div>
 
-      <MobileChat messages={chatMessages} onGuess={handleGuess} disabled={isDrawer || gameOver || !!roundEnd || !!wordChoices} />
+      <MobileChat messages={chatMessages} onGuess={handleGuess} disabled={isSpectator || isDrawer || gameOver || !!roundEnd || !!wordChoices} />
     </div>
   )
 }

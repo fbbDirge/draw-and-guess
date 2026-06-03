@@ -1,0 +1,474 @@
+
+> draw-and-guess-server@1.0.0 dev
+> node --watch src/index.js
+
+[server] 你画我猜 运行于 http://localhost:4000
+Restarting 'src/index.js'
+[server] 你画我猜 运行于 http://localhost:4000
+[connect] MZGBxA5bAGRnpa3BAAAC
+[connect] GDW3EDlUss2r8CV1AAAF
+[disconnect] GDW3EDlUss2r8CV1AAAF
+[connect] sdh79Upc6CZRC0xuAAAH
+[connect] m2vzc7oBT51Mn1L6AAAJ
+[connect] nuwGlrN1XY-LulidAAAL
+[disconnect] nuwGlrN1XY-LulidAAAL
+[disconnect] m2vzc7oBT51Mn1L6AAAJ
+[connect] op7o5DOIrGTqGHfSAAAN
+[disconnect] op7o5DOIrGTqGHfSAAAN
+[connect] Q_w2IWPw7Xr2xdr1AAAP
+[disconnect] Q_w2IWPw7Xr2xdr1AAAP
+Restarting 'src/index.js'
+[server] 你画我猜 运行于 http://localhost:4000
+[connect] 2zeF8-6a-ctUwfPyAAAB
+[connect] tS0zQlnQbhhQgeeBAAAD
+Restarting 'src/index.js'
+[server] 你画我猜 运行于 http://localhost:4000
+[connect] _Jtf12KrxjYUWqEMAAAB
+[connect] tHM1zbJ0eluq80kDAAAD
+Restarting 'src/index.js'
+[server] 你画我猜 运行于 http://localhost:4000
+[connect] cvZr_C5uFtwVTLc2AAAB
+[connect] 3ixlqxtBjEC7wWqlAAAD
+Restarting 'src/index.js'
+[server] 你画我猜 运行于 http://localhost:4000
+[connect] 5OEALta-P54PiuGVAAAB
+[connect] kTtMBWc7pwdtw6LsAAAD
+Restarting 'src/index.js'
+[server] 你画我猜 运行于 http://localhost:4000
+[connect] btFtp0CZIKGuFAhDAAAB
+[connect] ifBYwm9QnsXKFK6YAAAD
+Restarting 'src/index.js'
+[server] 你画我猜 运行于 http://localhost:4000
+[connect] xzocPnZL05bh4wXJAAAB
+[connect] J9hFmyUKD88_Udy6AAAD
+Restarting 'src/index.js'
+[server] 你画我猜 运行于 http://localhost:4000
+[connect] RpxuOIXbz-yyvX_fAAAB
+[connect] -8Wo650EV0QLLbvQAAAD
+Restarting 'src/index.js'
+[server] 你画我猜 运行于 http://localhost:4000
+[connect] 9OLSiqyX-lrTPKPiAAAB
+[connect] AaT1S1xwsyhlJOr-AAAD
+Restarting 'src/index.js'
+[server] 你画我猜 运行于 http://localhost:4000
+[connect] eMpC4n0IRR1G3pxbAAAB
+[connect] EsvilUjsksAjm2x2AAAD
+Restarting 'src/index.js'
+[server] 你画我猜 运行于 http://localhost:4000
+[connect] 18nTE_lMCokDeQniAAAB
+[connect] kw_38n0AfBDzULdoAAAD
+Restarting 'src/index.js'
+[server] 你画我猜 运行于 http://localhost:4000
+[connect] GBK392Qu-xpDlSWOAAAB
+[connect] 57N1_QOq9NdIlFLIAAAD
+Restarting 'src/index.js'
+[server] 你画我猜 运行于 http://localhost:4000
+[connect] aSk_F0WkW2CViEhOAAAB
+[connect] Um7rdhbm7VS8VOyhAAAD
+Restarting 'src/index.js'
+[server] 你画我猜 运行于 http://localhost:4000
+[connect] WEYVUao75XWoO1G9AAAB
+[connect] kS9QhYbWd_m8DY7SAAAD
+Restarting 'src/index.js'
+[server] 你画我猜 运行于 http://localhost:4000
+[connect] QxSY70QTI8ONykwpAAAB
+[connect] 6iT-iX1muONWfoVZAAAD
+Restarting 'src/index.js'
+[server] 你画我猜 运行于 http://localhost:4000
+[connect] wd7uG2FOJqyTDMg8AAAB
+[connect] sif2-D5IQqG8IRpAAAAD
+Restarting 'src/index.js'
+[server] 你画我猜 运行于 http://localhost:4000
+[connect] MAvvmJcARJo1sqodAAAB
+[connect] oNRMGv0I5rUnKf5hAAAD
+[disconnect] MAvvmJcARJo1sqodAAAB
+[disconnect] oNRMGv0I5rUnKf5hAAAD
+[connect] 5BVMeMq0_ZCEMLLPAAAG
+[connect] 3k--F3q5wkw2HGMAAAAJ
+[disconnect] 5BVMeMq0_ZCEMLLPAAAG
+[connect] jvUNzXYKqGC1-WWoAAAL
+[disconnect] 3k--F3q5wkw2HGMAAAAJ
+[connect] Q8fRvelGOLIb9AJ5AAAN
+Restarting 'src/index.js'
+[server] 你画我猜 运行于 http://localhost:4000
+Restarting 'src/index.js'
+[server] 你画我猜 运行于 http://localhost:4000
+[connect] yc1n8N4fLKiqsX40AAAB
+[connect] 74RHnKQEHopixxyUAAAD
+[disconnect] yc1n8N4fLKiqsX40AAAB
+[connect] xhwZocD8WMm-JshbAAAF
+[disconnect] 74RHnKQEHopixxyUAAAD
+[connect] SR4524qv_IwEoy7cAAAH
+[disconnect] xhwZocD8WMm-JshbAAAF
+[disconnect] SR4524qv_IwEoy7cAAAH
+[connect] Ad7SgOUAnXLWA5l7AAAJ
+[connect] xNeKorOfjoi9adnsAAAM
+[disconnect] Ad7SgOUAnXLWA5l7AAAJ
+[connect] yFJgyqtCj3FFIRrJAAAO
+[disconnect] xNeKorOfjoi9adnsAAAM
+[connect] -L9MTKh657ylGOBqAAAQ
+[disconnect] yFJgyqtCj3FFIRrJAAAO
+[connect] 7vsTflffm0oGnnFGAAAS
+[disconnect] -L9MTKh657ylGOBqAAAQ
+[connect] 9WFqVNXBzqszMXiLAAAU
+[disconnect] 7vsTflffm0oGnnFGAAAS
+[connect] il0uS2Nt2-sdUnFsAAAW
+[disconnect] 9WFqVNXBzqszMXiLAAAU
+[connect] FdSjlPWg1PlbfQ3dAAAY
+[disconnect] il0uS2Nt2-sdUnFsAAAW
+[connect] rrbbhl-7hvCSpqypAAAa
+[disconnect] FdSjlPWg1PlbfQ3dAAAY
+[connect] u9uxqbuI9lri4pmrAAAc
+[disconnect] rrbbhl-7hvCSpqypAAAa
+[connect] GC3c0ErrtguUCN3bAAAe
+[disconnect] u9uxqbuI9lri4pmrAAAc
+[connect] hCkER7TySQCDz72MAAAg
+[disconnect] GC3c0ErrtguUCN3bAAAe
+[connect] rY1iawhlMeT1ZF0XAAAi
+[disconnect] hCkER7TySQCDz72MAAAg
+[connect] 7DS3Mku0VhyKM2IIAAAk
+[disconnect] rY1iawhlMeT1ZF0XAAAi
+[disconnect] 7DS3Mku0VhyKM2IIAAAk
+[connect] ss7eChNUJxVib1--AAAm
+[connect] fYuuNP8BnRzG07kpAAAp
+[disconnect] ss7eChNUJxVib1--AAAm
+[connect] yrJLuGOxDW6b8SL5AAAr
+[disconnect] fYuuNP8BnRzG07kpAAAp
+[connect] JEmMkBCxTdElp5k1AAAt
+[disconnect] yrJLuGOxDW6b8SL5AAAr
+[connect] LletbyWKECIUF3kwAAAv
+[disconnect] JEmMkBCxTdElp5k1AAAt
+[connect] 5PxYwwFrcV5ob4UPAAAx
+Restarting 'src/index.js'
+[server] 你画我猜 运行于 http://localhost:4000
+[connect] aWfD6-boFFrUVxNkAAAB
+[connect] Tlw-ILQ6PWjyB9EUAAAD
+Restarting 'src/index.js'
+[server] 你画我猜 运行于 http://localhost:4000
+[connect] og54b6IHrXUmwq4gAAAB
+[connect] 55fb6LCV3EnK-xpsAAAD
+[disconnect] og54b6IHrXUmwq4gAAAB
+[connect] uU4xObhG3_sXfdKIAAAF
+[disconnect] 55fb6LCV3EnK-xpsAAAD
+[connect] 3RmK88eYZ16RjrFNAAAH
+[connect] twLtCZiKpH8gUegjAAAJ
+[connect] swNgbcGomRRssImtAAAM
+[connect] 3lp6Z4oMBlkyB4hkAAAO
+[disconnect] 3lp6Z4oMBlkyB4hkAAAO
+[connect] Go1oN2zAJcT2TDfkAAAR
+[connect] Hj5oHb9lTBB05vWiAAAT
+[disconnect] Go1oN2zAJcT2TDfkAAAR
+[connect] nUEV8jZfADhTQr9PAAAV
+[disconnect] nUEV8jZfADhTQr9PAAAV
+[disconnect] Hj5oHb9lTBB05vWiAAAT
+[connect] h6AMFT14mvZuIKwkAAAX
+[connect] rZz1h-TSsd1QD90PAAAZ
+[disconnect] h6AMFT14mvZuIKwkAAAX
+[disconnect] rZz1h-TSsd1QD90PAAAZ
+[connect] uXh_9NlTpPEnJypuAAAb
+[connect] uVqB-xFI4DydfQ60AAAd
+[disconnect] uVqB-xFI4DydfQ60AAAd
+[disconnect] uXh_9NlTpPEnJypuAAAb
+[connect] CP0gh0fLj_6Cvh3dAAAf
+[connect] KyHCQkskwHK6TnZlAAAh
+[disconnect] CP0gh0fLj_6Cvh3dAAAf
+[disconnect] KyHCQkskwHK6TnZlAAAh
+[connect] _mZTIAQffSWlYW4YAAAk
+[connect] xibfJv7QvWiyB8WnAAAl
+[disconnect] _mZTIAQffSWlYW4YAAAk
+[disconnect] xibfJv7QvWiyB8WnAAAl
+[disconnect] uU4xObhG3_sXfdKIAAAF
+[connect] hWLzjqn1ogpvPh_aAAAn
+[disconnect] twLtCZiKpH8gUegjAAAJ
+[disconnect] 3RmK88eYZ16RjrFNAAAH
+[disconnect] swNgbcGomRRssImtAAAM
+[connect] gM39rYWwxGYmsbEXAAAp
+[connect] ylgiTRRNtxO5bGIPAAAr
+[connect] tDUkUrWouAGbAgdEAAAt
+[connect] H4osiUGeAwmGqemsAAAw
+[connect] _TGvx_iV1P47Ofn8AAAx
+[disconnect] _TGvx_iV1P47Ofn8AAAx
+[connect] wkknGjEPRXrtot9eAAA0
+[disconnect] wkknGjEPRXrtot9eAAA0
+[disconnect] H4osiUGeAwmGqemsAAAw
+[connect] J8-t3Twxph0YaC_dAAA3
+[connect] 7FJQFqLhuHEJzyDoAAA4
+[disconnect] 7FJQFqLhuHEJzyDoAAA4
+[disconnect] J8-t3Twxph0YaC_dAAA3
+[connect] lwT5sD30hWUfhMCkAAA7
+[connect] 1zPkggOLFnCC7MnAAAA8
+[disconnect] 1zPkggOLFnCC7MnAAAA8
+[disconnect] lwT5sD30hWUfhMCkAAA7
+[connect] H-qF4JyzTSEXMI27AAA_
+[connect] sDa4xc2j23aPXvltAABA
+[disconnect] ylgiTRRNtxO5bGIPAAAr
+[connect] xzckA0QQBWQuZQQrAABD
+[disconnect] sDa4xc2j23aPXvltAABA
+[connect] xR1VGwJ9TqqgdGxIAABF
+[disconnect] xR1VGwJ9TqqgdGxIAABF
+[connect] _oijbEd6OSQ4CHedAABH
+[disconnect] _oijbEd6OSQ4CHedAABH
+[connect] 705gNuz17yIV4JQmAABJ
+[disconnect] 705gNuz17yIV4JQmAABJ
+[connect] 3-aQ7Y0UVW2TfE-TAABL
+[disconnect] H-qF4JyzTSEXMI27AAA_
+[disconnect] 3-aQ7Y0UVW2TfE-TAABL
+[connect] bTGjiNU3f2lB1yKbAABO
+[connect] yzpdYTlxjCQUrt4EAABP
+[disconnect] bTGjiNU3f2lB1yKbAABO
+[disconnect] yzpdYTlxjCQUrt4EAABP
+[connect] zcouUByNMUo6UXMMAABR
+[connect] OSvixipCWr1v03pyAABT
+[disconnect] zcouUByNMUo6UXMMAABR
+[disconnect] OSvixipCWr1v03pyAABT
+Restarting 'src/index.js'
+[server] 你画我猜 运行于 http://localhost:4000
+[connect] oX1Rs4eFM1EVsXgvAAAB
+[connect] pctYzL_saZYsspJzAAAD
+[connect] XhZUhiw8N5mNKT8lAAAF
+[connect] GFtATkPZTNwif9igAAAH
+Restarting 'src/index.js'
+[server] 你画我猜 运行于 http://localhost:4000
+[connect] YXuN80GQLSgYZ8B3AAAB
+[connect] 5Qvyr-9fb_fXTN5xAAAD
+[connect] w4BVugZpQCdnCcT8AAAG
+[connect] A6bMfJUxFN3XwfJJAAAH
+Restarting 'src/index.js'
+[server] 你画我猜 运行于 http://localhost:4000
+[connect] BRtaDqN1OEcxf-XhAAAB
+[connect] WnLLUNp1JmNQL5U8AAAE
+[connect] hjRB_YkeB9i_BnPJAAAF
+[connect] AHzwBkdcHB--7qN8AAAH
+Restarting 'src/index.js'
+[server] 你画我猜 运行于 http://localhost:4000
+[connect] VQRHtLZGysCjDfy_AAAB
+[connect] fvesz76Q6zNqQSrTAAAD
+[connect] vYMoe1UvbOhWo4XNAAAG
+[connect] 64bDo_JFi1sogbOZAAAH
+Restarting 'src/index.js'
+[server] 你画我猜 运行于 http://localhost:4000
+[connect] 4qgtG1XScfJjD-AcAAAB
+[connect] 0RUmFe6HtEc5RPQbAAAD
+[connect] BIxP4gd8CGg5g9G5AAAF
+[connect] h2Szex9zW5GWxdDEAAAH
+Restarting 'src/index.js'
+[server] 你画我猜 运行于 http://localhost:4000
+[connect] S3hYS610D20_9JnmAAAB
+[connect] hUBiCyxhuxSfPlqAAAAD
+[connect] RzSYzUg6A9-KhMcZAAAF
+[connect] ADBNkrqwShLD2I4DAAAH
+Restarting 'src/index.js'
+[server] 你画我猜 运行于 http://localhost:4000
+[connect] oEoKL66od8RCvLsaAAAB
+[connect] JaZn9olId6povtn-AAAD
+[connect] 6HmeSK782tzQMcwOAAAF
+[connect] 2Yge663CwhiFYWXBAAAH
+Restarting 'src/index.js'
+[server] 你画我猜 运行于 http://localhost:4000
+[connect] 02_3kI6RgeYcS5fYAAAB
+[connect] uYyNZj2XpxXGU4OXAAAD
+[connect] NwJIP86IeNMNhdYAAAAF
+[connect] b5ofdWTNK5I6eSYFAAAH
+Restarting 'src/index.js'
+[server] 你画我猜 运行于 http://localhost:4000
+[connect] W2g1JD_NDa8mbBafAAAB
+[connect] LXMsTRxBOyKAuUmEAAAD
+[connect] jt6g6OFgF0TIQrutAAAF
+[connect] K8WPlW4KHOKx-jTxAAAH
+[disconnect] jt6g6OFgF0TIQrutAAAF
+[disconnect] W2g1JD_NDa8mbBafAAAB
+[connect] EWy8N1Z8rRo3jxUMAAAK
+[connect] eMO0AU9vnjtEVThAAAAL
+[disconnect] LXMsTRxBOyKAuUmEAAAD
+[connect] ingRuSQH-MdKo_lJAAAN
+[disconnect] K8WPlW4KHOKx-jTxAAAH
+[connect] e1aisGQeJ9oQF9QuAAAP
+[disconnect] e1aisGQeJ9oQF9QuAAAP
+[disconnect] EWy8N1Z8rRo3jxUMAAAK
+[disconnect] eMO0AU9vnjtEVThAAAAL
+[connect] dHqI2JpR0cADxFMHAAAS
+[connect] eAztVeh4793j9tBxAAAT
+[disconnect] ingRuSQH-MdKo_lJAAAN
+[connect] P7eS-QctId69cLpaAAAV
+[connect] CYfyXgNXaBbHtluCAAAX
+[disconnect] eAztVeh4793j9tBxAAAT
+[connect] A11EPAeJ8TY39a9iAAAa
+[connect] eiPCPUGjqtttrL5KAAAb
+[disconnect] eiPCPUGjqtttrL5KAAAb
+[connect] 7-SSVrbRh9bNseZZAAAd
+[disconnect] dHqI2JpR0cADxFMHAAAS
+[connect] pQcqsUQ0nC8ZKpJEAAAf
+[disconnect] A11EPAeJ8TY39a9iAAAa
+[disconnect] 7-SSVrbRh9bNseZZAAAd
+[connect] KwlR686-1FKUGkheAAAh
+[connect] dcUwtN_QVSVJI0cUAAAj
+[disconnect] KwlR686-1FKUGkheAAAh
+[disconnect] dcUwtN_QVSVJI0cUAAAj
+[connect] RX1LOu-hgmi3_h0FAAAl
+[connect] tikJZnlegyaQnod4AAAn
+[disconnect] RX1LOu-hgmi3_h0FAAAl
+[disconnect] tikJZnlegyaQnod4AAAn
+[connect] AVa-gHvWGfT3UjdnAAAq
+[connect] TImPWUmEDklFsx_lAAAr
+[disconnect] TImPWUmEDklFsx_lAAAr
+[disconnect] AVa-gHvWGfT3UjdnAAAq
+Restarting 'src/index.js'
+[server] 你画我猜 运行于 http://localhost:4000
+[connect] VOk4z9zQ405RD6vPAAAB
+[connect] QZBH-ACKw52iaVWuAAAD
+[connect] S7xS-ORF43jWsykrAAAF
+Restarting 'src/index.js'
+[server] 你画我猜 运行于 http://localhost:4000
+[connect] 1Ok4QNPlPlpBaT88AAAB
+[connect] EmXLwbAeuazIJFtkAAAD
+[connect] XK8_CfJJgprEOQViAAAF
+Restarting 'src/index.js'
+[server] 你画我猜 运行于 http://localhost:4000
+[connect] gz_NP3wS1lrx51tpAAAB
+[connect] cR88gYAA_kJC_ROIAAAD
+[connect] nGKZyRRI4fzMRT0gAAAF
+Restarting 'src/index.js'
+[server] 你画我猜 运行于 http://localhost:4000
+[connect] 1zoLLxoRa3S2CBqRAAAB
+[connect] iWQRBBH_ua4goXytAAAD
+[connect] qj5M-ddg9AWJfCopAAAF
+Restarting 'src/index.js'
+[server] 你画我猜 运行于 http://localhost:4000
+[connect] lVsWTBa9R9SkVi3vAAAB
+[connect] yOhex2H504eio9aSAAAD
+[connect] fGf4jj81QTsrYnO0AAAF
+Restarting 'src/index.js'
+[server] 你画我猜 运行于 http://localhost:4000
+[connect] 4dzc_QqqkhL3ZRsBAAAB
+[connect] 9rP0kMw6ugipSYBGAAAD
+[connect] wklov1gT0cPpYYcwAAAF
+Restarting 'src/index.js'
+[server] 你画我猜 运行于 http://localhost:4000
+[connect] ar_78_MiZ6dp9jr6AAAB
+[connect] GLZ7PFA9utfv-R2OAAAD
+[connect] huvOtTCypJn9NG6lAAAF
+Restarting 'src/index.js'
+[server] 你画我猜 运行于 http://localhost:4000
+[connect] 8fMZM7_B0lR80o1aAAAB
+[connect] Gvt-QD6jJ50-jqzRAAAD
+[connect] Q3nApIO3MEH_6kroAAAF
+Restarting 'src/index.js'
+[server] 你画我猜 运行于 http://localhost:4000
+[connect] HphhfCvrH0QMIZkbAAAB
+[connect] d6XNc7TAmngKgmUNAAAD
+[connect] w1IjS6jO19Fs4-5HAAAF
+Restarting 'src/index.js'
+[server] 你画我猜 运行于 http://localhost:4000
+[connect] 9njd4SO9X4_ZHniBAAAB
+[connect] YSFdp5NujJ529i78AAAD
+[connect] csWvzAqghIAu7ra3AAAF
+Restarting 'src/index.js'
+[server] 你画我猜 运行于 http://localhost:4000
+[connect] 54oJaKcAWFgJN_AXAAAB
+[connect] 6QEK0EwLHK_z93VrAAAD
+[connect] 4ciTnwmjy5Y_lhoqAAAF
+Restarting 'src/index.js'
+[server] 你画我猜 运行于 http://localhost:4000
+[connect] 6CFEOQwSQUufrvFVAAAB
+[connect] vIgqokulS2YdDYagAAAD
+[connect] VJzT2Cq8DINIXnUCAAAF
+Restarting 'src/index.js'
+[server] 你画我猜 运行于 http://localhost:4000
+[connect] c70OInNmCx8BUi8dAAAB
+[connect] lPwzEGLfSpeYAPzZAAAD
+[connect] FhwdNIGGxdenmBiUAAAF
+Restarting 'src/index.js'
+[server] 你画我猜 运行于 http://localhost:4000
+[connect] 7bsF-JYgIC0etpv8AAAC
+[connect] EowXQr71Z7A3e0hUAAAD
+[connect] n5Xu51RK6IOaRPMEAAAF
+Restarting 'src/index.js'
+[server] 你画我猜 运行于 http://localhost:4000
+[connect] Lai4GoZnEoi-fabuAAAB
+[connect] FGR8568dYGtksaBqAAAD
+[connect] 0OOlFxrHhmU8qcCyAAAF
+Restarting 'src/index.js'
+[server] 你画我猜 运行于 http://localhost:4000
+[connect] buF_SQu_PvXQGZv6AAAB
+[connect] 3B4hQVEpeHQTezuiAAAD
+[connect] fUBgrUtyanIpU-EdAAAF
+Restarting 'src/index.js'
+[server] 你画我猜 运行于 http://localhost:4000
+[connect] EHAsCDGcL7WtUSPvAAAB
+[connect] VeQKCMyliBYHzDFZAAAD
+[connect] 0KLWPPMFW6nfbJDUAAAF
+Restarting 'src/index.js'
+[server] 你画我猜 运行于 http://localhost:4000
+[connect] 5r7rT9cpQlpaRvmmAAAB
+[connect] EoHNpSCJWPpI0ZG3AAAD
+[connect] c3pMw0pNHAq1uFDpAAAF
+Restarting 'src/index.js'
+[server] 你画我猜 运行于 http://localhost:4000
+[connect] xjDztf-7Itp6v9TIAAAB
+[connect] jMe35PQddYe8AwwVAAAD
+[connect] 4XYDfoiR_6x3RRe3AAAF
+Restarting 'src/index.js'
+[server] 你画我猜 运行于 http://localhost:4000
+[connect] uqDSgwywddHQgzNhAAAB
+[connect] s7DEbkQ4TBHtZ9XeAAAD
+[connect] xLo1hdp7bwX9WymIAAAF
+Restarting 'src/index.js'
+[server] 你画我猜 运行于 http://localhost:4000
+[connect] BwOI1otvT9jVFlSRAAAB
+[connect] BqvwR7XALLy-aB_qAAAD
+[connect] fKalcQvkVMjoq73vAAAF
+Restarting 'src/index.js'
+[server] 你画我猜 运行于 http://localhost:4000
+[connect] AHWgvnuobdPYyl3uAAAB
+[connect] vB4DgWi-dB3hcpuNAAAD
+[connect] f49t2NxbIUvc_iaNAAAF
+Restarting 'src/index.js'
+[server] 你画我猜 运行于 http://localhost:4000
+[connect] Jy4CHT73RuLvovmdAAAB
+[connect] dmH5VqaFQhwp58gDAAAD
+[connect] TDbrdy3FFswdVznjAAAF
+[disconnect] dmH5VqaFQhwp58gDAAAD
+[connect] sp-I1C2T7M8gqUHSAAAH
+[disconnect] TDbrdy3FFswdVznjAAAF
+[connect] BA7ch9Ogv8ev_96aAAAJ
+[disconnect] Jy4CHT73RuLvovmdAAAB
+[connect] y3WfF6mFK_uoeiY7AAAL
+Restarting 'src/index.js'
+[server] 你画我猜 运行于 http://localhost:4000
+Restarting 'src/index.js'
+[server] 你画我猜 运行于 http://localhost:4000
+[connect] TfEXhHollHYVVY-2AAAB
+[connect] keCTZWyt8_i2bUyEAAAD
+[connect] F_ZUS8uHPtsVOrA6AAAF
+Restarting 'src/index.js'
+[server] 你画我猜 运行于 http://localhost:4000
+[connect] 1wroYeFM4y-u2UbsAAAB
+[connect] SprS4BcJXfWlywFUAAAD
+[connect] CJ7xBtP0pLjNGauOAAAF
+[disconnect] 1wroYeFM4y-u2UbsAAAB
+[connect] Z9uM41xIP5ccNuJGAAAH
+[connect] ToSAOqcqmO-D0YbWAAAK
+[connect] YXb_Ly243xWrZLhhAAAN
+[connect] B_GofV4lqSumY08jAAAP
+[disconnect] YXb_Ly243xWrZLhhAAAN
+[disconnect] B_GofV4lqSumY08jAAAP
+[connect] Eaht-2jYFjjNOcSfAAAS
+[connect] riZItDZCWGyx3RLFAAAU
+[disconnect] Z9uM41xIP5ccNuJGAAAH
+[disconnect] ToSAOqcqmO-D0YbWAAAK
+[disconnect] SprS4BcJXfWlywFUAAAD
+[disconnect] riZItDZCWGyx3RLFAAAU
+[disconnect] Eaht-2jYFjjNOcSfAAAS
+[connect] KvbcVpzngf5_h0BKAAAX
+[connect] iduZ1YeL4Xpa5XTaAAAa
+[connect] tWjJGfz9f-NCTuXoAAAd
+[connect] Rc7dLzK5iT6LZhaOAAAf
+[connect] MtwRapjD_h_kGPfsAAAh
+[disconnect] tWjJGfz9f-NCTuXoAAAd
+[disconnect] iduZ1YeL4Xpa5XTaAAAa
+[disconnect] MtwRapjD_h_kGPfsAAAh
+[disconnect] Rc7dLzK5iT6LZhaOAAAf
+Restarting 'src/index.js'
+[server] 你画我猜 运行于 http://localhost:4000
+[connect] rB3Zc8Jg3DIhrWUBAAAB
+[connect] _KcxI5LKq4EBtKZNAAAD
