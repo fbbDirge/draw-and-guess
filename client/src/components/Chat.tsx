@@ -5,9 +5,10 @@ interface Props {
   messages: ChatMessage[]
   onGuess: (guess: string) => void
   disabled: boolean
+  mode?: 'guess' | 'chat'
 }
 
-export default function Chat({ messages, onGuess, disabled }: Props) {
+export default function Chat({ messages, onGuess, disabled, mode = 'guess' }: Props) {
   const [input, setInput] = useState('')
   const bottomRef = useRef<HTMLDivElement>(null)
 
@@ -40,12 +41,12 @@ export default function Chat({ messages, onGuess, disabled }: Props) {
         <input
           value={input}
           onChange={(e) => setInput(e.target.value)}
-          placeholder={disabled ? '等待下一轮...' : '输入你的猜测...'}
+          placeholder={disabled ? '等待下一轮...' : mode === 'chat' ? '输入聊天内容...' : '输入你的猜测...'}
           disabled={disabled}
           autoComplete="off"
         />
         <button type="submit" className="btn-primary btn-sm" disabled={disabled || !input.trim()}>
-          猜
+          {mode === 'chat' ? '发送' : '猜'}
         </button>
       </form>
     </div>

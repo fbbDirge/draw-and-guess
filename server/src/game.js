@@ -11,7 +11,7 @@ export class RoomManager {
     const hostId = hostToken || uuidv4()
     const room = {
       id,
-      maxPlayers: Math.min(20, Math.max(2, maxPlayers)),
+      maxPlayers: Math.min(30, Math.max(2, maxPlayers)),
       roundTime: Math.min(120, Math.max(30, roundTime)),
       status: 'waiting',
       hostId,
@@ -360,9 +360,14 @@ export class GameLogic {
 
     const activePlayers = this.roomManager._activePlayers(room)
     const drawer = activePlayers[room.currentDrawerIndex]
-    if (!activePlayers.some(p => p.id === playerId)) return { error: '观众不能猜词' }
-    if (playerId === drawer?.id) return { error: '你是画家，不能猜词' }
-    if (room.guessedThisRound.has(playerId)) return { error: '本轮已猜对' }
+    const isActive = activePlayers.some(p => p.id === playerId)
+
+    // Spectators don't know the word → free chat, broadcast to everyone
+    if (!isActive) return { chat: true, knowsAnswer: false }
+    // Drawer or already-correct players know the word → chat only to the answer circle
+    if (playerId === drawer?.id || room.guessedThisRound.has(playerId)) {
+      return { chat: true, knowsAnswer: true }
+    }
 
     const correct = guess.trim() === room.currentWord
 

@@ -64,6 +64,7 @@ export function useSocket() {
   const [canvasVersion, setCanvasVersion] = useState(0)
   const [timerBump, setTimerBump] = useState(0)
   const [lastCorrectId, setLastCorrectId] = useState<string>('')
+  const [roundCorrectIds, setRoundCorrectIds] = useState<string[]>([])
   const canvasVersionRef = useRef(0)
   const gameEndTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const [error, setError] = useState<string>('')
@@ -148,6 +149,7 @@ export function useSocket() {
     s.on('round_start', (data: RoundInfo) => {
       setRound(data); setWordChoices(null); setRoundEnd(null)
       setGameOver(false); setCountdown(-1)
+      setRoundCorrectIds([])
       canvasVersionRef.current = data.canvasVersion || 0
       setCanvasVersion(canvasVersionRef.current)
       setCanvasStrokes([])
@@ -192,6 +194,7 @@ export function useSocket() {
       if (data.scores) setScores(data.scores)
       if (data.correct && data.playerId) {
         setLastCorrectId(data.playerId)
+        setRoundCorrectIds((prev) => prev.includes(data.playerId) ? prev : [...prev, data.playerId])
         setTimeout(() => setLastCorrectId(''), 2000)
       }
     })
@@ -265,7 +268,7 @@ export function useSocket() {
     room, myPlayerId, myPlayer,
     round, wordChoices, roundEnd,
     chatMessages, scores, finalScores, gameOver,
-    countdown, canvasStrokes, lastClear, timerBump, lastCorrectId,
+    countdown, canvasStrokes, lastClear, timerBump, lastCorrectId, roundCorrectIds,
     canvasVersion,
     error, clearError,
   }

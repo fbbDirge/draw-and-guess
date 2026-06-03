@@ -29,8 +29,8 @@ function PlayerStrip({ players, scores, myPlayerId, drawerId, lastCorrectId }: {
   )
 }
 
-function MobileChat({ messages, onGuess, disabled }: {
-  messages: any[]; onGuess: (g: string) => void; disabled: boolean
+function MobileChat({ messages, onGuess, disabled, mode = 'guess' }: {
+  messages: any[]; onGuess: (g: string) => void; disabled: boolean; mode?: 'guess' | 'chat'
 }) {
   const [input, setInput] = useState('')
   const bottomRef = useRef<HTMLDivElement>(null)
@@ -59,10 +59,10 @@ function MobileChat({ messages, onGuess, disabled }: {
       <form className="chat-input-row" onSubmit={handleSubmit}>
         <input
           value={input} onChange={(e) => setInput(e.target.value)}
-          placeholder={disabled ? '等待中...' : '输入猜测...'}
+          placeholder={disabled ? '等待中...' : mode === 'chat' ? '输入聊天...' : '输入猜测...'}
           disabled={disabled} autoComplete="off"
         />
-        <button type="submit" className="btn-primary btn-sm" disabled={disabled || !input.trim()}>猜</button>
+        <button type="submit" className="btn-primary btn-sm" disabled={disabled || !input.trim()}>{mode === 'chat' ? '发送' : '猜'}</button>
       </form>
     </div>
   )
@@ -72,7 +72,7 @@ export default function Game({ ctx }: any) {
   const {
     connect, connected, emit, leaveRoom, room, myPlayerId, round, wordChoices, roundEnd,
     chatMessages, scores, finalScores, gameOver,
-    countdown, canvasStrokes, lastClear, timerBump, lastCorrectId, canvasVersion,
+    countdown, canvasStrokes, lastClear, timerBump, lastCorrectId, canvasVersion, roundCorrectIds,
     error, clearError,
   } = ctx
   const { id } = useParams()
@@ -173,6 +173,11 @@ export default function Game({ ctx }: any) {
   const isSpectator = room.players.find((p: any) => p.id === myPlayerId)?.role === 'spectator'
   const isDrawer = !isSpectator && (round?.isDrawer ?? false)
   const isHost = myPlayerId === room?.hostId
+  const iGuessed = roundCorrectIds.includes(myPlayerId)
+  // Input placeholder/behavior: spectators, correct guessers, and the drawer chat freely;
+  // others are still guessing. Disabled only when there's no active round or game is over.
+  const chatDisabled = gameOver || (!round && !isSpectator)
+  const chatMode = isSpectator || isDrawer || iGuessed ? 'chat' : 'guess'
 
   return (
     <div className="page game-page">
@@ -306,7 +311,7 @@ export default function Game({ ctx }: any) {
         </div>
 
         <div className="game-sidebar">
-          <ScoreBoard scores={scores} players={activePlayers} finalScores={finalScores} drawerId={round?.drawerId} />
+          <ScoreBoard scores={scores} players={activePlayers} finalScores={finalScores} drawerId={round?.drawerId} correctIds={roundCorrectIds} />
           {spectators.length > 0 && (
             <div className="spectator-box">
               <span className="spectator-title">观众席 ({spectators.length})</span>
@@ -317,11 +322,11 @@ export default function Game({ ctx }: any) {
               </div>
             </div>
           )}
-          <Chat messages={chatMessages} onGuess={handleGuess} disabled={isSpectator || isDrawer || gameOver || !round} />
+          <Chat messages={chatMessages} onGuess={handleGuess} disabled={chatDisabled} mode={chatMode} />
         </div>
       </div>
 
-      <MobileChat messages={chatMessages} onGuess={handleGuess} disabled={isSpectator || isDrawer || gameOver || !!roundEnd || !!wordChoices} />
+      <MobileChat messages={chatMessages} onGuess={handleGuess} disabled={chatDisabled} mode={chatMode} />
     </div>
   )
 }

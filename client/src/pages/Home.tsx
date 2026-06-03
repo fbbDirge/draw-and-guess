@@ -44,7 +44,7 @@ export default function Home({ ctx }: any) {
     emit('join_room', { roomId: joinRoomId.trim(), username: username.trim() })
   }
 
-  const playerCounts = [2, 4, 6, 8, 10, 12, 16, 20]
+  const playerCounts = [2, 4, 6, 8, 10, 12, 16, 20, 30]
   const timeOptions = [30, 45, 60, 90, 120]
 
   return (

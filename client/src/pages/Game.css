@@ -96,7 +96,9 @@
   background: var(--bg2); border-radius: var(--radius); padding: 14px;
 }
 .scoreboard h3 { font-size: .9rem; margin-bottom: 8px; }
-.score-list { display: flex; flex-direction: column; gap: 4px; }
+.score-list { display: flex; flex-direction: column; gap: 4px; max-height: 240px; overflow-y: auto; }
+.score-list::-webkit-scrollbar { width: 6px; }
+.score-list::-webkit-scrollbar-thumb { background: var(--text2); border-radius: 3px; }
 .score-row {
   display: flex; align-items: center; gap: 8px;
   padding: 6px 8px; background: var(--bg); border-radius: 6px; font-size: .85rem;
@@ -105,6 +107,7 @@
 .score-row .name { flex: 1; }
 .score-row .pts { font-weight: 700; color: var(--gold); }
 .score-row.drawing { border: 1px solid var(--primary); }
+.guessed-mark { color: var(--success, #2ecc71); font-weight: 700; }
 
 /* Overlays */
 .game-over-overlay, .word-picker-overlay, .round-end-overlay {

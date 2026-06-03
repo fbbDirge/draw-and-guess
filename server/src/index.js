@@ -234,6 +234,28 @@ io.on('connection', (socket) => {
     const result = proxy.submitGuess(roomId, session.player.id, guess?.trim() || '')
     if (result.error) return socket.emit('error', { message: result.error })
 
+    // Free chat (spectators, drawer, already-correct players)
+    if (result.chat) {
+      const msg = {
+        userId: session.player.id, userName: session.player.name,
+        message: guess, isGuess: false,
+      }
+      if (result.knowsAnswer) {
+        // Drawer & correct guessers know the word → only the answer circle sees it
+        const drawer = activePlayers(room)[room.currentDrawerIndex]
+        const circle = new Set([drawer?.id, ...room.guessedThisRound])
+        for (const player of room.players.values()) {
+          if (circle.has(player.id) || player.role === 'spectator') {
+            io.to(player.id).emit('chat_message', msg)
+          }
+        }
+      } else {
+        // Spectators don't know the word → everyone sees it
+        io.to(roomId).emit('chat_message', msg)
+      }
+      return
+    }
+
     if (result.correct) {
       io.to(roomId).emit('guess_result', {
         correct: true, playerId: session.player.id, playerName: result.playerName,
@@ -306,26 +328,9 @@ io.on('connection', (socket) => {
   function handlePlayerLeave(socketId) {
     const session = getSession(socketId)
     if (!session) return
-    removePlayer(session.roomId, session.player.id, true)
     socket.leave(session.roomId)
     socket.leave(session.player.id)
-    return
-    for (const [roomId, room] of rooms.rooms) {
-      if (!room.players.has(socketId)) continue
-      const result = rooms.removePlayer(roomId, socketId)
-      if (!result) break
-      if (result.roomEmpty) {
-        const proxy = gameProxies.get(roomId)
-        if (proxy) { proxy.cleanup(); gameProxies.delete(roomId) }
-        break
-      }
-      if (result.room) {
-        io.to(roomId).emit('room_update', { room: r(result.room) })
-        io.to(roomId).emit('chat_message', { system: true, message: `${result.playerName} 离开了房间` })
-      }
-      socket.leave(roomId)
-      break
-    }
+    removePlayer(session.roomId, session.player.id, true)
   }
 })
 
