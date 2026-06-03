@@ -141,6 +141,7 @@ export function useSocket() {
 
     s.on('word_choices', (data: WordChoicesData) => {
       setWordChoices(data)
+      setRound(null)
       setRoundEnd(null)
     })
 
