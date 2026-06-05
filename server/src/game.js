@@ -1,6 +1,13 @@
 import { v4 as uuidv4 } from 'uuid'
 import { getRandomWord, wordBank } from './words.js'
 
+// 规范化答案比对：去首尾空白 + 转小写。中文无大小写，toLowerCase 对其无影响，
+// 故可安全统一处理英文/数字词的大小写敏感误判。
+function normalizeAnswer(s) {
+  return String(s ?? '').trim().toLowerCase()
+}
+
+
 export class RoomManager {
   constructor() {
     this.rooms = new Map()
@@ -21,6 +28,7 @@ export class RoomManager {
       currentRound: 0,
       totalRounds: 0,
       currentDrawerIndex: -1,
+      currentDrawerId: '',
       currentWord: '',
       currentCategory: '',
       roundTimer: null,
@@ -31,6 +39,7 @@ export class RoomManager {
       canvasStrokes: [],
       pendingWordChoices: null,
       pendingDrawerIndex: -1,
+      pendingDrawerId: '',
       wordRefreshLeft: 0,
       createdAt: Date.now(),
     }
@@ -254,6 +263,8 @@ export class GameLogic {
     room.guessedThisRound = new Set()
 
     const drawer = activePlayers[room.currentDrawerIndex]
+    room.currentDrawerId = drawer.id
+    room.pendingDrawerId = drawer.id
 
     // Generate 4 unique word choices
     const choices = []
@@ -276,9 +287,10 @@ export class GameLogic {
     if (room.pickTimer) clearTimeout(room.pickTimer)
     room.pickTimer = this._setTimer(() => {
       if (room.status !== 'playing' || !room.pendingWordChoices) return
-      const skipped = activePlayers[room.pendingDrawerIndex]
+      const skipped = room.players.get(room.pendingDrawerId)
       room.pendingWordChoices = null
       room.pendingDrawerIndex = -1
+      room.pendingDrawerId = ''
       if (this._onPickTimeout && skipped) this._onPickTimeout(room.id, skipped.name)
       const nextData = this._prepareNextRound(room)
       if (!nextData) return
@@ -304,7 +316,7 @@ export class GameLogic {
   refreshWordChoices(roomId, playerId) {
     const room = this.roomManager.getRoom(roomId)
     if (!room || room.status !== 'playing') return { error: '状态异常' }
-    const drawer = this.roomManager._activePlayers(room)[room.pendingDrawerIndex]
+    const drawer = room.players.get(room.pendingDrawerId)
     if (!drawer || drawer.id !== playerId) return { error: '你不是当前画家' }
     if (room.wordRefreshLeft <= 0) return { error: '换词次数已用完' }
 
@@ -338,7 +350,7 @@ export class GameLogic {
     const room = this.roomManager.getRoom(roomId)
     if (!room || room.status !== 'playing') return { error: '游戏状态异常' }
 
-    const drawer = this.roomManager._activePlayers(room)[room.pendingDrawerIndex]
+    const drawer = room.players.get(room.pendingDrawerId)
     if (!drawer || drawer.id !== playerId) return { error: '你不是当前画家' }
     if (!room.pendingWordChoices || choiceIndex < 0 || choiceIndex >= room.pendingWordChoices.length) {
       return { error: '选择无效' }
@@ -350,6 +362,7 @@ export class GameLogic {
     room.currentCategory = chosen.category
     room.pendingWordChoices = null
     room.pendingDrawerIndex = -1
+    room.pendingDrawerId = ''
     room.roundStartTime = Date.now()
     room.canvasVersion += 1
     room.canvasStrokes = []
@@ -379,7 +392,7 @@ export class GameLogic {
     if (!room || room.status !== 'playing') return { error: '游戏未在进行' }
 
     const activePlayers = this.roomManager._activePlayers(room)
-    const drawer = activePlayers[room.currentDrawerIndex]
+    const drawer = room.players.get(room.currentDrawerId)
     const isActive = activePlayers.some(p => p.id === playerId)
 
     // Spectators don't know the word → free chat, broadcast to everyone
@@ -389,7 +402,7 @@ export class GameLogic {
       return { chat: true, knowsAnswer: true }
     }
 
-    const correct = guess.trim() === room.currentWord
+    const correct = normalizeAnswer(guess) === normalizeAnswer(room.currentWord)
 
     if (correct) {
       room.guessedThisRound.add(playerId)
@@ -397,10 +410,8 @@ export class GameLogic {
       const elapsed = (Date.now() - room.roundStartTime) / 1000
       const timeRatio = 1 - (elapsed / room.roundTime)
       const guesserPoints = Math.max(10, Math.round(50 * timeRatio))
-      const drawerPoints = Math.round(30 * (room.guessedThisRound.size / (activePlayers.length - 1)))
 
       room.scores[playerId] = (room.scores[playerId] || 0) + guesserPoints
-      room.scores[drawer.id] = (room.scores[drawer.id] || 0) + drawerPoints
 
       const totalGuessers = activePlayers.length - 1
       const correctCount = room.guessedThisRound.size
@@ -438,7 +449,7 @@ export class GameLogic {
     if (room.roundTimer) clearTimeout(room.roundTimer)
     if (room.status !== 'playing') return null
 
-    const drawer = this.roomManager._activePlayers(room)[room.currentDrawerIndex]
+    const drawer = room.players.get(room.currentDrawerId)
     const correctCount = room.guessedThisRound.size
     const drawerBonus = correctCount * 10
     if (drawer) {
@@ -516,6 +527,7 @@ export class GameLogic {
     room.currentRound = 0
     room.totalRounds = 0
     room.currentDrawerIndex = -1
+    room.currentDrawerId = ''
     room.currentWord = ''
     room.currentCategory = ''
     room.guessedThisRound = new Set()
@@ -524,6 +536,7 @@ export class GameLogic {
     room.canvasStrokes = []
     room.pendingWordChoices = null
     room.pendingDrawerIndex = -1
+    room.pendingDrawerId = ''
     if (room.roundTimer) clearTimeout(room.roundTimer)
     room.roundTimer = null
     if (room.pickTimer) clearTimeout(room.pickTimer)

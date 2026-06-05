@@ -185,7 +185,7 @@ io.on('connection', (socket) => {
     const session = getSession(socket.id)
     const room = session?.room
     if (!room || room.status !== 'playing') return
-    const drawer = activePlayers(room)[room.currentDrawerIndex]
+    const drawer = room.players.get(room.currentDrawerId)
     if (drawer?.id !== session.player.id) return
     const stroke = {
       points: Array.isArray(data?.points) ? data.points : [],
@@ -205,7 +205,7 @@ io.on('connection', (socket) => {
     const session = getSession(socket.id)
     const room = session?.room
     if (!room || room.status !== 'playing') return
-    const drawer = activePlayers(room)[room.currentDrawerIndex]
+    const drawer = room.players.get(room.currentDrawerId)
     if (drawer?.id !== session.player.id) return
     room.canvasVersion = (room.canvasVersion || 0) + 1
     room.canvasStrokes = []
@@ -216,7 +216,7 @@ io.on('connection', (socket) => {
     const session = getSession(socket.id)
     const room = session?.room
     if (!room || room.status !== 'playing') return
-    const drawer = activePlayers(room)[room.currentDrawerIndex]
+    const drawer = room.players.get(room.currentDrawerId)
     if (drawer?.id !== session.player.id) return
     if (!strokeId) return
     room.canvasStrokes = room.canvasStrokes.filter((seg) => seg?.strokeId !== strokeId)
@@ -242,7 +242,7 @@ io.on('connection', (socket) => {
       }
       if (result.knowsAnswer) {
         // Drawer & correct guessers know the word → only the answer circle sees it
-        const drawer = activePlayers(room)[room.currentDrawerIndex]
+        const drawer = room.players.get(room.currentDrawerId)
         const circle = new Set([drawer?.id, ...room.guessedThisRound])
         for (const player of room.players.values()) {
           if (circle.has(player.id) || player.role === 'spectator') {
@@ -347,8 +347,8 @@ function getSession(socketId) {
 function restoreGameState(socket, room, player) {
   if (!room || room.status !== 'playing') return
 
-  if (room.pendingWordChoices && room.pendingDrawerIndex >= 0) {
-    const drawer = activePlayers(room)[room.pendingDrawerIndex]
+  if (room.pendingWordChoices && room.pendingDrawerId) {
+    const drawer = room.players.get(room.pendingDrawerId)
     if (drawer?.id === player.id) {
       socket.emit('word_choices', {
         type: 'word_pick',
@@ -364,7 +364,7 @@ function restoreGameState(socket, room, player) {
     return
   }
 
-  const drawer = activePlayers(room)[room.currentDrawerIndex]
+  const drawer = room.players.get(room.currentDrawerId)
   if (!drawer || !room.currentWord) return
   const elapsed = Math.floor((Date.now() - room.roundStartTime) / 1000)
   const remaining = Math.max(0, room.roundTime - elapsed)
