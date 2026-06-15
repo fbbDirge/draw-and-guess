@@ -240,8 +240,9 @@ io.on('connection', (socket) => {
         userId: session.player.id, userName: session.player.name,
         message: guess, isGuess: false,
       }
-      if (result.knowsAnswer) {
-        // Drawer & correct guessers know the word → only the answer circle sees it
+      if (result.restrictAnswer) {
+        // 发言者可能知道/能推断答案（画家、已猜对者、观众）→ 只发给答案圈与观众，
+        // 不向仍在猜词的玩家泄漏明文。
         const drawer = room.players.get(room.currentDrawerId)
         const circle = new Set([drawer?.id, ...room.guessedThisRound])
         for (const player of room.players.values()) {
@@ -250,7 +251,6 @@ io.on('connection', (socket) => {
           }
         }
       } else {
-        // Spectators don't know the word → everyone sees it
         io.to(roomId).emit('chat_message', msg)
       }
       return

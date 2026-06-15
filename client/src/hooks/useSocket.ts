@@ -110,7 +110,9 @@ export function useSocket() {
       setConnected(true)
       const currentRoom = roomRef.current
       if (currentRoom?.id) {
-        const username = localStorage.getItem('ddg_username') || '玩家'
+        // 重连时复用已缓存的昵称；无昵称则不自动重连，交由页面引导回首页填昵称。
+        const username = (localStorage.getItem('ddg_username') || '').trim()
+        if (!username) return
         s.emit('join_room', {
           roomId: currentRoom.id,
           username,

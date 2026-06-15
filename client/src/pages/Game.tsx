@@ -101,10 +101,15 @@ export default function Game({ ctx }: any) {
     if (!connected) { connect(); return }
     if (!room && !gameOver && !triedJoin) {
       setTriedJoin(true)
-      const username = localStorage.getItem('ddg_username') || '玩家'
+      const username = (localStorage.getItem('ddg_username') || '').trim()
+      // 直连游戏页但本地没有昵称时，跳回首页填昵称后再加入，避免默认「玩家」匿名身份。
+      if (!username) {
+        navigate(`/?join=${id}`, { replace: true })
+        return
+      }
       emit('join_room', { roomId: id, username, playerToken: getPlayerToken() })
     }
-  }, [connected, room, gameOver, triedJoin, id, emit, connect])
+  }, [connected, room, gameOver, triedJoin, id, emit, connect, navigate])
 
   useEffect(() => {
     if (countdown > 0 || room?.status === 'playing') {
@@ -184,10 +189,10 @@ export default function Game({ ctx }: any) {
   const isDrawer = !isSpectator && (round?.isDrawer ?? false)
   const isHost = myPlayerId === room?.hostId
   const iGuessed = roundCorrectIds.includes(myPlayerId)
-  // Input placeholder/behavior: spectators, correct guessers, and the drawer chat freely;
-  // others are still guessing. Disabled only when there's no active round or game is over.
-  const chatDisabled = gameOver || (!round && !isSpectator)
-  const chatMode = isSpectator || isDrawer || iGuessed ? 'chat' : 'guess'
+  // 观众现在也能猜词，与玩家行为一致：有进行中的回合即可猜。
+  // 画家和已猜对者切换为自由聊天；其余人（含观众）处于猜词状态。
+  const chatDisabled = gameOver || !round
+  const chatMode = isDrawer || iGuessed ? 'chat' : 'guess'
 
   return (
     <div className="page game-page">

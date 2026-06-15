@@ -23,10 +23,16 @@ export default function Room({ ctx }: any) {
     }
     if (!room && !triedJoin) {
       setTriedJoin(true)
-      const username = localStorage.getItem('ddg_username') || '玩家'
+      const username = (localStorage.getItem('ddg_username') || '').trim()
+      // 通过房间链接直连但本地没有昵称时，跳回首页填昵称后再加入，
+      // 避免出现默认的「玩家」匿名身份。
+      if (!username) {
+        navigate(`/?join=${id}`, { replace: true })
+        return
+      }
       emit('join_room', { roomId: id, username, playerToken: getPlayerToken() })
     }
-  }, [connected, room, triedJoin, id, emit, connect])
+  }, [connected, room, triedJoin, id, emit, connect, navigate])
 
   // Navigate to game on countdown or if room is playing
   useEffect(() => {

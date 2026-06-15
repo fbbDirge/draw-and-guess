@@ -4,6 +4,17 @@
   max-width: 460px;
 }
 
+.join-hint {
+  background: var(--accent-bg, rgba(52, 152, 219, .12));
+  color: var(--text, inherit);
+  border-radius: 8px;
+  padding: 10px 12px;
+  margin-bottom: 14px;
+  font-size: .9rem;
+  text-align: center;
+}
+.join-hint b { color: var(--primary, #3498db); }
+
 .form-group { margin-bottom: 14px; }
 .form-group label {
   display: block;

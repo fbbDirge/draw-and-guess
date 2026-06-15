@@ -1,14 +1,17 @@
 import { useState, useEffect } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, useSearchParams } from 'react-router-dom'
 import { getCachedUsername, setCachedUsername, getRecentRooms, addRecentRoom } from '../utils/storage'
 import './Home.css'
 
 export default function Home({ ctx }: any) {
   const { connect, connected, emit, room, error, clearError } = ctx
   const navigate = useNavigate()
+  const [searchParams] = useSearchParams()
 
   const [username, setUsername] = useState(getCachedUsername)
-  const [joinRoomId, setJoinRoomId] = useState('')
+  // 从房间链接直连但缺昵称时会被重定向到 /?join=房号，这里预填房号引导填昵称后加入。
+  const joinParam = (searchParams.get('join') || '').replace(/\D/g, '').slice(0, 6)
+  const [joinRoomId, setJoinRoomId] = useState(joinParam)
   const [maxPlayers, setMaxPlayers] = useState(8)
   const [roundTime, setRoundTime] = useState(60)
   const [recentRooms, setRecentRooms] = useState<string[]>(getRecentRooms())
@@ -55,6 +58,11 @@ export default function Home({ ctx }: any) {
       <p className="subtitle">多人实时绘画猜词游戏</p>
 
       <div className="card home-card">
+        {joinParam && (
+          <div className="join-hint">
+            请先填写昵称即可加入房间 <b>{joinParam}</b>
+          </div>
+        )}
         <div className="form-group">
           <label>你的昵称</label>
           <input
@@ -62,6 +70,7 @@ export default function Home({ ctx }: any) {
             onChange={(e) => setUsername(e.target.value)}
             placeholder="输入昵称..."
             maxLength={12}
+            autoFocus={!!joinParam}
           />
         </div>
 

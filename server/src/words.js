@@ -1521,10 +1521,30 @@ export const wordBank = {
   ],
 }
 
+// 各分类词数缓存，用于加权抽词（仅在 wordBank 静态不变时计算一次）
+const _categoryCounts = Object.fromEntries(
+  Object.keys(wordBank).map((cat) => [cat, wordBank[cat].length])
+)
+
+// 按词总数加权随机选词：先以「分类词数」为权重选分类，再在分类内等概率选词。
+// 这样每个词的命中概率 = (该分类词数/可选词总数) × (1/该分类词数) = 1/可选词总数，
+// 即每个词等概率，避免小分类的词被超额抽中。
 export function getRandomWord(categories = null) {
-  const cats = categories || Object.keys(wordBank)
-  const category = cats[Math.floor(Math.random() * cats.length)]
-  const words = wordBank[category] || wordBank['日常物品']
+  const cats = (categories || Object.keys(wordBank)).filter((c) => wordBank[c]?.length)
+  if (cats.length === 0) {
+    const words = wordBank['日常物品']
+    return { word: words[Math.floor(Math.random() * words.length)], category: '日常物品' }
+  }
+
+  const total = cats.reduce((sum, c) => sum + (_categoryCounts[c] ?? wordBank[c].length), 0)
+  let r = Math.random() * total
+  let category = cats[cats.length - 1]
+  for (const c of cats) {
+    r -= _categoryCounts[c] ?? wordBank[c].length
+    if (r < 0) { category = c; break }
+  }
+
+  const words = wordBank[category]
   const word = words[Math.floor(Math.random() * words.length)]
   return { word, category }
 }

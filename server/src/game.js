@@ -7,6 +7,13 @@ function normalizeAnswer(s) {
   return String(s ?? '').trim().toLowerCase()
 }
 
+// 用户名长度上限。前端有 maxLength=12，但通过链接直连或伪造客户端可绕过，
+// 故在服务端权威层再次截断，防止超长用户名撑破 UI 或滥用。
+const MAX_NAME_LEN = 12
+function sanitizeName(name) {
+  return String(name ?? '').trim().slice(0, MAX_NAME_LEN)
+}
+
 
 export class RoomManager {
   constructor() {
@@ -16,6 +23,7 @@ export class RoomManager {
   createRoom(socketId, hostName, hostToken, maxPlayers = 8, roundTime = 60) {
     const id = this._generateRoomId()
     const hostId = hostToken || uuidv4()
+    const name = sanitizeName(hostName)
     const room = {
       id,
       maxPlayers: Math.min(30, Math.max(2, maxPlayers)),
@@ -45,7 +53,7 @@ export class RoomManager {
     }
 
     const player = {
-      id: hostId, socketId, name: hostName, token: hostToken,
+      id: hostId, socketId, name, token: hostToken,
       isHost: true, isReady: true, role: 'player', score: 0, connected: true, joinedAt: Date.now(),
       disconnectedAt: 0, disconnectTimer: null,
     }
@@ -60,6 +68,8 @@ export class RoomManager {
     const room = this.rooms.get(roomId)
     if (!room) return { error: '房间不存在' }
 
+    const name = sanitizeName(playerName)
+
     if (playerToken && room.playerTokens.has(playerToken)) {
       const existingId = room.playerTokens.get(playerToken)
       const existing = room.players.get(existingId)
@@ -67,7 +77,7 @@ export class RoomManager {
         if (existing.disconnectTimer) clearTimeout(existing.disconnectTimer)
         existing.disconnectTimer = null
         existing.socketId = socketId
-        existing.name = playerName || existing.name
+        existing.name = name || existing.name
         existing.connected = true
         existing.disconnectedAt = 0
         return { room, player: existing, reconnected: true }
@@ -80,13 +90,14 @@ export class RoomManager {
 
     const playerId = playerToken || uuidv4()
     const player = {
-      id: playerId, socketId, name: playerName, token: playerToken,
+      id: playerId, socketId, name, token: playerToken,
       isHost: false, isReady: role === 'spectator', role, score: 0, connected: true, joinedAt: Date.now(),
       disconnectedAt: 0, disconnectTimer: null,
     }
 
     room.players.set(playerId, player)
     if (playerToken) room.playerTokens.set(playerToken, playerId)
+    // 玩家与观众都计入分数表：观众也能猜词得分并进入排行榜。
     room.scores[playerId] = 0
     return { room, player, reconnected: false }
   }
@@ -195,7 +206,8 @@ export class RoomManager {
       player.role = 'spectator'
       player.isReady = true
       room.guessedThisRound.delete(playerId)
-      delete room.scores[playerId]
+      // 观众也计分入榜，切换为观众时保留已有分数（不再删除 scores 条目）。
+      room.scores[playerId] = room.scores[playerId] || 0
     }
     return { room, player }
   }
@@ -247,7 +259,8 @@ export class GameLogic {
     const activePlayers = this.roomManager._activePlayers(room)
     room.totalRounds = activePlayers.length
     room.scores = {}
-    for (const player of activePlayers) room.scores[player.id] = 0
+    // 玩家与观众都参与计分；但只有玩家轮流当画家，故 totalRounds 仍按玩家数。
+    for (const player of room.players.values()) room.scores[player.id] = 0
     room.currentDrawerIndex = -1
     return this._prepareNextRound(room)
   }
@@ -393,15 +406,15 @@ export class GameLogic {
 
     const activePlayers = this.roomManager._activePlayers(room)
     const drawer = room.players.get(room.currentDrawerId)
-    const isActive = activePlayers.some(p => p.id === playerId)
+    const isPlayerSeat = activePlayers.some(p => p.id === playerId)
 
-    // Spectators don't know the word → free chat, broadcast to everyone
-    if (!isActive) return { chat: true, knowsAnswer: false }
-    // Drawer or already-correct players know the word → chat only to the answer circle
+    // 画家与已猜对者（玩家或观众）确知答案 → 聊天只发给答案圈，不向仍在猜的人泄漏明文。
     if (playerId === drawer?.id || room.guessedThisRound.has(playerId)) {
-      return { chat: true, knowsAnswer: true }
+      return { chat: true, restrictAnswer: true }
     }
 
+    // 其余人（仍在猜的玩家、尚未猜对的观众）一律进入猜词判定。
+    // 观众可以猜词、猜对可计分入榜，但猜对只提示「XX 猜对了」，绝不展示答案明文。
     const correct = normalizeAnswer(guess) === normalizeAnswer(room.currentWord)
 
     if (correct) {
@@ -413,25 +426,30 @@ export class GameLogic {
 
       room.scores[playerId] = (room.scores[playerId] || 0) + guesserPoints
 
-      const totalGuessers = activePlayers.length - 1
-      const correctCount = room.guessedThisRound.size
-      const remainingGuessers = totalGuessers - correctCount
+      // 回合节奏（全员猜对提前结束 / 仅剩一人缩短倒计时）只统计玩家席，
+      // 观众猜对仅计分，不影响回合进度。
+      let allGuessed = false
+      if (isPlayerSeat) {
+        const totalGuessers = activePlayers.length - 1
+        const playerCorrectCount = [...room.guessedThisRound].filter(id => activePlayers.some(p => p.id === id)).length
+        const remainingGuessers = totalGuessers - playerCorrectCount
 
-      // When only 1 guesser left, shorten timer to 10s
-      if (remainingGuessers <= 1 && correctCount < totalGuessers) {
-        if (room.roundTimer) clearTimeout(room.roundTimer)
-        room.roundTimer = this._setTimer(() => {
-          if (this._onRoundEnd) this._onRoundEnd(room.id, this._endRound(room))
-        }, 10000)
-        if (this._onTimerShorten) this._onTimerShorten(room.id, 10)
-      }
+        // 仅剩一名玩家未猜对时，缩短倒计时至 10s
+        if (remainingGuessers <= 1 && playerCorrectCount < totalGuessers) {
+          if (room.roundTimer) clearTimeout(room.roundTimer)
+          room.roundTimer = this._setTimer(() => {
+            if (this._onRoundEnd) this._onRoundEnd(room.id, this._endRound(room))
+          }, 10000)
+          if (this._onTimerShorten) this._onTimerShorten(room.id, 10)
+        }
 
-      const allGuessed = remainingGuessers === 0
-      if (allGuessed) {
-        if (room.roundTimer) clearTimeout(room.roundTimer)
-        this._setTimer(() => {
-          if (this._onRoundEnd) this._onRoundEnd(room.id, this._endRound(room))
-        }, 2000)
+        allGuessed = remainingGuessers === 0
+        if (allGuessed) {
+          if (room.roundTimer) clearTimeout(room.roundTimer)
+          this._setTimer(() => {
+            if (this._onRoundEnd) this._onRoundEnd(room.id, this._endRound(room))
+          }, 2000)
+        }
       }
 
       return {
@@ -545,7 +563,8 @@ export class GameLogic {
     for (const player of room.players.values()) {
       player.isReady = player.isHost || player.role === 'spectator'
       player.score = 0
-      if (player.role !== 'spectator') room.scores[player.id] = 0
+      // 观众也计分入榜，再来一局时同样重置其分数。
+      room.scores[player.id] = 0
     }
 
     return { ok: true }
